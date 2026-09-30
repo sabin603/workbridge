@@ -108,7 +108,10 @@ public class JobSeekerDashboard extends JFrame {
 
         JButton applicationsButton =
                 new JButton("My Applications");
-
+        JButton matchingButton = new JButton("Find Matching Jobs");
+        matchingButton.addActionListener(e -> {
+            new JobRecommendationFrame(jobSeeker).setVisible(true);
+        });
 
         JPanel buttonPanel =
                 new JPanel(
@@ -117,7 +120,7 @@ public class JobSeekerDashboard extends JFrame {
                         )
                 );
 
-
+        buttonPanel.add(matchingButton);
         buttonPanel.add(
                 applicationsButton
         );
