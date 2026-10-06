@@ -5,346 +5,731 @@ import model.Job;
 import model.User;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
 public class EmployerDashboard extends JFrame {
 
     private User employer;
-
     private JobDAO jobDAO;
+    private JPanel jobsPanel;
 
-    private JTable jobTable;
-
-    private DefaultTableModel tableModel;
-
+    private final Color BACKGROUND = new Color(245, 247, 250);
+    private final Color HEADER = new Color(25, 35, 50);
+    private final Color TEXT = new Color(31, 41, 55);
+    private final Color SECONDARY_TEXT = new Color(107, 114, 128);
+    private final Color PRIMARY = new Color(37, 99, 235);
+    private final Color DANGER = new Color(220, 38, 38);
+    private final Color BORDER = new Color(229, 231, 235);
 
     public EmployerDashboard(User user) {
 
         this.employer = user;
+        this.jobDAO = new JobDAO();
 
-        jobDAO = new JobDAO();
-
-        setTitle(
-                "WorkBridge - Employer Dashboard"
-        );
-
-        setSize(900, 600);
-
-        setDefaultCloseOperation(
-                JFrame.EXIT_ON_CLOSE
-        );
-
+        setTitle("WorkBridge - Employer Dashboard");
+        setSize(1000, 700);
+        setMinimumSize(new Dimension(900, 600));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         createUI();
-
         loadJobs();
     }
 
-
     private void createUI() {
 
-        setLayout(
-                new BorderLayout()
+        getContentPane().setBackground(BACKGROUND);
+
+        setLayout(new BorderLayout());
+
+        // =====================================================
+        // HEADER
+        // =====================================================
+
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(HEADER);
+        headerPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        18, 25, 18, 25
+                )
         );
 
+        JPanel brandPanel = new JPanel();
+        brandPanel.setLayout(
+                new BoxLayout(
+                        brandPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+        brandPanel.setOpaque(false);
 
-        // =========================
-        // TOP PANEL
-        // =========================
+        JLabel titleLabel =
+                new JLabel("WorkBridge");
 
-        JPanel topPanel =
-                new JPanel(
-                        new BorderLayout()
-                );
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        25
+                )
+        );
 
+        JLabel subtitleLabel =
+                new JLabel("Employer Recruitment Dashboard");
+
+        subtitleLabel.setForeground(
+                new Color(203, 213, 225)
+        );
+
+        subtitleLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        brandPanel.add(titleLabel);
+        brandPanel.add(
+                Box.createVerticalStrut(3)
+        );
+        brandPanel.add(subtitleLabel);
+
+        // =====================================================
+        // RIGHT HEADER
+        // =====================================================
+
+        JPanel rightHeaderPanel = new JPanel();
+        rightHeaderPanel.setLayout(
+                new BoxLayout(
+                        rightHeaderPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+        rightHeaderPanel.setOpaque(false);
 
         JLabel welcomeLabel =
                 new JLabel(
                         "Welcome, "
-                                + employer.getName()
+                                + safe(employer.getName())
                 );
 
-
+        welcomeLabel.setForeground(Color.WHITE);
         welcomeLabel.setFont(
                 new Font(
-                        "Arial",
+                        "Segoe UI",
                         Font.BOLD,
-                        20
+                        15
                 )
         );
 
-
-        topPanel.add(
-                welcomeLabel,
-                BorderLayout.WEST
+        welcomeLabel.setAlignmentX(
+                Component.RIGHT_ALIGNMENT
         );
 
+        JPanel headerButtons =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.RIGHT,
+                                7,
+                                0
+                        )
+                );
+
+        headerButtons.setOpaque(false);
 
         JButton postJobButton =
-                new JButton(
+                createPrimaryButton(
                         "Post New Job"
                 );
 
+        JButton refreshButton =
+                createHeaderButton(
+                        "Refresh"
+                );
 
-        topPanel.add(
-                postJobButton,
+        JButton logoutButton =
+                createHeaderButton(
+                        "Logout"
+                );
+
+        headerButtons.add(postJobButton);
+        headerButtons.add(refreshButton);
+        headerButtons.add(logoutButton);
+
+        rightHeaderPanel.add(welcomeLabel);
+        rightHeaderPanel.add(
+                Box.createVerticalStrut(10)
+        );
+        rightHeaderPanel.add(headerButtons);
+
+        headerPanel.add(
+                brandPanel,
+                BorderLayout.WEST
+        );
+
+        headerPanel.add(
+                rightHeaderPanel,
                 BorderLayout.EAST
         );
 
-
         add(
-                topPanel,
+                headerPanel,
                 BorderLayout.NORTH
         );
 
+        // =====================================================
+        // MAIN PANEL
+        // =====================================================
 
-        // =========================
-        // JOB TABLE
-        // =========================
-
-        String[] columns = {
-
-                "ID",
-                "Title",
-                "Category",
-                "Location",
-                "Salary",
-                "Job Type"
-        };
-
-
-        tableModel =
-                new DefaultTableModel(
-                        columns,
-                        0
-                ) {
-
-                    @Override
-                    public boolean isCellEditable(
-                            int row,
-                            int column
-                    ) {
-
-                        return false;
-                    }
-                };
-
-
-        jobTable =
-                new JTable(
-                        tableModel
+        JPanel mainPanel =
+                new JPanel(
+                        new BorderLayout(
+                                0,
+                                12
+                        )
                 );
 
+        mainPanel.setBackground(BACKGROUND);
 
-        jobTable.setSelectionMode(
-                ListSelectionModel.SINGLE_SELECTION
+        mainPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        15, 20, 15, 20
+                )
         );
 
+        // =====================================================
+        // SECTION HEADER
+        // =====================================================
+
+        JPanel sectionHeader =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        sectionHeader.setOpaque(false);
+
+        JPanel sectionText =
+                new JPanel();
+
+        sectionText.setLayout(
+                new BoxLayout(
+                        sectionText,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        sectionText.setOpaque(false);
+
+        JLabel sectionTitle =
+                new JLabel("Your Job Posts");
+
+        sectionTitle.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        21
+                )
+        );
+
+        sectionTitle.setForeground(TEXT);
+
+        JLabel sectionDescription =
+                new JLabel(
+                        "Manage your job vacancies and review applicants."
+                );
+
+        sectionDescription.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        sectionDescription.setForeground(
+                SECONDARY_TEXT
+        );
+
+        sectionText.add(sectionTitle);
+        sectionText.add(
+                Box.createVerticalStrut(3)
+        );
+        sectionText.add(sectionDescription);
+
+        sectionHeader.add(
+                sectionText,
+                BorderLayout.WEST
+        );
+
+        mainPanel.add(
+                sectionHeader,
+                BorderLayout.NORTH
+        );
+
+        // =====================================================
+        // JOB CARDS PANEL
+        // =====================================================
+
+        jobsPanel = new JPanel();
+
+        jobsPanel.setLayout(
+                new BoxLayout(
+                        jobsPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        jobsPanel.setBackground(BACKGROUND);
+
+        jobsPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        5, 2, 20, 2
+                )
+        );
 
         JScrollPane scrollPane =
                 new JScrollPane(
-                        jobTable
+                        jobsPanel
                 );
 
+        scrollPane.setBorder(
+                BorderFactory.createEmptyBorder()
+        );
 
-        add(
+        scrollPane.setBackground(
+                BACKGROUND
+        );
+
+        scrollPane.getViewport()
+                .setBackground(BACKGROUND);
+
+        scrollPane.setHorizontalScrollBarPolicy(
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        );
+
+        scrollPane.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+        );
+
+        scrollPane.getVerticalScrollBar()
+                .setUnitIncrement(16);
+
+        mainPanel.add(
                 scrollPane,
                 BorderLayout.CENTER
         );
 
-
-        // =========================
-        // BOTTOM PANEL
-        // =========================
-
-        JPanel bottomPanel =
-                new JPanel();
-
-
-        JButton editButton =
-                new JButton(
-                        "Edit"
-                );
-
-
-        JButton deleteButton =
-                new JButton(
-                        "Delete"
-                );
-
-
-        JButton applicantsButton =
-                new JButton(
-                        "View Applicants"
-                );
-
-
-        JButton refreshButton =
-                new JButton(
-                        "Refresh"
-                );
-
-
-        bottomPanel.add(
-                editButton
-        );
-
-
-        bottomPanel.add(
-                deleteButton
-        );
-
-
-        bottomPanel.add(
-                applicantsButton
-        );
-
-
-        bottomPanel.add(
-                refreshButton
-        );
-
-
         add(
-                bottomPanel,
-                BorderLayout.SOUTH
+                mainPanel,
+                BorderLayout.CENTER
         );
 
-
-        // =========================
+        // =====================================================
         // BUTTON ACTIONS
-        // =========================
+        // =====================================================
 
         postJobButton.addActionListener(
                 e -> openPostJob()
         );
 
-
-        editButton.addActionListener(
-                e -> editSelectedJob()
-        );
-
-
-        deleteButton.addActionListener(
-                e -> deleteSelectedJob()
-        );
-
-
-        applicantsButton.addActionListener(
-                e -> viewApplicants()
-        );
-
-
         refreshButton.addActionListener(
                 e -> loadJobs()
         );
+
+        logoutButton.addActionListener(
+                e -> logout()
+        );
     }
 
+    // =========================================================
+    // CREATE JOB CARD
+    // =========================================================
 
-    // =========================
-    // LOAD EMPLOYER JOBS
-    // =========================
+    private JPanel createJobCard(Job job) {
+
+        JPanel card =
+                new JPanel(
+                        new BorderLayout(
+                                15,
+                                10
+                        )
+                );
+
+        card.setBackground(Color.WHITE);
+
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER,
+                                1
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                17,
+                                20,
+                                17,
+                                20
+                        )
+                )
+        );
+
+        card.setAlignmentX(
+                Component.LEFT_ALIGNMENT
+        );
+
+        card.setMaximumSize(
+                new Dimension(
+                        Integer.MAX_VALUE,
+                        230
+                )
+        );
+
+        // =====================================================
+        // JOB INFORMATION
+        // =====================================================
+
+        JPanel informationPanel =
+                new JPanel();
+
+        informationPanel.setOpaque(false);
+
+        informationPanel.setLayout(
+                new BoxLayout(
+                        informationPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        JLabel jobTitle =
+                new JLabel(
+                        safe(job.getTitle())
+                );
+
+        jobTitle.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        19
+                )
+        );
+
+        jobTitle.setForeground(TEXT);
+
+        JLabel categoryLabel =
+                new JLabel(
+                        safe(job.getCategory())
+                );
+
+        categoryLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        12
+                )
+        );
+
+        categoryLabel.setForeground(PRIMARY);
+
+        JLabel locationLabel =
+                new JLabel(
+                        "Location: "
+                                + safe(job.getLocation())
+                );
+
+        locationLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        locationLabel.setForeground(
+                SECONDARY_TEXT
+        );
+
+        JLabel salaryLabel =
+                new JLabel(
+                        "Salary: "
+                                + safe(job.getSalary())
+                );
+
+        salaryLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        salaryLabel.setForeground(
+                new Color(22, 101, 52)
+        );
+
+        JLabel typeLabel =
+                new JLabel(
+                        "Job Type: "
+                                + formatJobType(
+                                job.getJobType()
+                        )
+                );
+
+        typeLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        typeLabel.setForeground(
+                SECONDARY_TEXT
+        );
+
+        String description =
+                shorten(
+                        safe(job.getDescription()),
+                        180
+                );
+
+        JLabel descriptionLabel =
+                new JLabel(
+                        "<html><b>Description:</b> "
+                                + escapeHtml(
+                                description
+                        )
+                                + "</html>"
+                );
+
+        descriptionLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        descriptionLabel.setForeground(TEXT);
+
+        informationPanel.add(jobTitle);
+
+        informationPanel.add(
+                Box.createVerticalStrut(5)
+        );
+
+        informationPanel.add(
+                categoryLabel
+        );
+
+        informationPanel.add(
+                Box.createVerticalStrut(7)
+        );
+
+        informationPanel.add(
+                locationLabel
+        );
+
+        informationPanel.add(
+                Box.createVerticalStrut(3)
+        );
+
+        informationPanel.add(
+                typeLabel
+        );
+
+        informationPanel.add(
+                Box.createVerticalStrut(3)
+        );
+
+        informationPanel.add(
+                salaryLabel
+        );
+
+        informationPanel.add(
+                Box.createVerticalStrut(8)
+        );
+
+        informationPanel.add(
+                descriptionLabel
+        );
+
+        // =====================================================
+        // ACTION BUTTONS
+        // =====================================================
+
+        JPanel actionPanel =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.RIGHT,
+                                7,
+                                0
+                        )
+                );
+
+        actionPanel.setOpaque(false);
+
+        JButton viewApplicantsButton =
+                createPrimaryButton(
+                        "View Applicants"
+                );
+
+        JButton editButton =
+                createSecondaryButton(
+                        "Edit"
+                );
+
+        JButton deleteButton =
+                createDangerButton(
+                        "Delete"
+                );
+
+        viewApplicantsButton.addActionListener(
+                e -> viewApplicants(job)
+        );
+
+        editButton.addActionListener(
+                e -> editJob(job)
+        );
+
+        deleteButton.addActionListener(
+                e -> deleteJob(job)
+        );
+
+        actionPanel.add(
+                viewApplicantsButton
+        );
+
+        actionPanel.add(
+                editButton
+        );
+
+        actionPanel.add(
+                deleteButton
+        );
+
+        card.add(
+                informationPanel,
+                BorderLayout.CENTER
+        );
+
+        card.add(
+                actionPanel,
+                BorderLayout.SOUTH
+        );
+
+        return card;
+    }
+
+    // =========================================================
+    // LOAD JOBS
+    // =========================================================
 
     private void loadJobs() {
 
-        tableModel.setRowCount(0);
-
-
-        List<Job> jobs =
-                jobDAO.getJobsByEmployer(
-                        employer.getUserId()
-                );
-
-
-        for (
-                Job job :
-                jobs
-        ) {
-
-            tableModel.addRow(
-                    new Object[]{
-
-                            job.getJobId(),
-
-                            job.getTitle(),
-
-                            job.getCategory(),
-
-                            job.getLocation(),
-
-                            job.getSalary(),
-
-                            job.getJobType()
-                    }
-            );
-        }
-    }
-
-
-    // =========================
-    // GET SELECTED JOB
-    // =========================
-
-    private Job getSelectedJob() {
-
-        int selectedRow =
-                jobTable.getSelectedRow();
-
-
-        if (selectedRow == -1) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a job first."
-            );
-
-            return null;
-        }
-
-
-        int jobId =
-                (int) tableModel.getValueAt(
-                        selectedRow,
-                        0
-                );
-
+        jobsPanel.removeAll();
 
         List<Job> jobs =
                 jobDAO.getJobsByEmployer(
                         employer.getUserId()
                 );
 
+        if (jobs == null || jobs.isEmpty()) {
 
-        for (
-                Job job :
-                jobs
-        ) {
+            JPanel emptyPanel =
+                    new JPanel();
 
-            if (
-                    job.getJobId() == jobId
-            ) {
+            emptyPanel.setLayout(
+                    new BoxLayout(
+                            emptyPanel,
+                            BoxLayout.Y_AXIS
+                    )
+            );
 
-                return job;
+            emptyPanel.setOpaque(false);
+
+            JLabel emptyTitle =
+                    new JLabel(
+                            "No job posts yet"
+                    );
+
+            emptyTitle.setFont(
+                    new Font(
+                            "Segoe UI",
+                            Font.BOLD,
+                            18
+                    )
+            );
+
+            emptyTitle.setForeground(TEXT);
+
+            emptyTitle.setAlignmentX(
+                    Component.CENTER_ALIGNMENT
+            );
+
+            JLabel emptyMessage =
+                    new JLabel(
+                            "Click \"Post New Job\" to create your first vacancy."
+                    );
+
+            emptyMessage.setFont(
+                    new Font(
+                            "Segoe UI",
+                            Font.PLAIN,
+                            14
+                    )
+            );
+
+            emptyMessage.setForeground(
+                    SECONDARY_TEXT
+            );
+
+            emptyMessage.setAlignmentX(
+                    Component.CENTER_ALIGNMENT
+            );
+
+            emptyPanel.add(
+                    Box.createVerticalStrut(70)
+            );
+
+            emptyPanel.add(
+                    emptyTitle
+            );
+
+            emptyPanel.add(
+                    Box.createVerticalStrut(8)
+            );
+
+            emptyPanel.add(
+                    emptyMessage
+            );
+
+            jobsPanel.add(
+                    emptyPanel
+            );
+
+        } else {
+
+            for (Job job : jobs) {
+
+                jobsPanel.add(
+                        createJobCard(job)
+                );
+
+                jobsPanel.add(
+                        Box.createVerticalStrut(12)
+                );
             }
         }
 
-
-        JOptionPane.showMessageDialog(
-                this,
-                "Job not found."
-        );
-
-
-        return null;
+        jobsPanel.revalidate();
+        jobsPanel.repaint();
     }
 
-
-    // =========================
-    // POST NEW JOB
-    // =========================
+    // =========================================================
+    // POST JOB
+    // =========================================================
 
     private void openPostJob() {
 
@@ -353,78 +738,65 @@ public class EmployerDashboard extends JFrame {
         ).setVisible(true);
     }
 
-
-    // =========================
+    // =========================================================
     // EDIT JOB
-    // =========================
+    // =========================================================
 
-    private void editSelectedJob() {
+    private void editJob(Job job) {
 
-        Job selectedJob =
-                getSelectedJob();
-
-
-        if (selectedJob == null) {
-
+        if (job == null) {
             return;
         }
-
 
         new EditJobForm(
                 employer,
-                selectedJob
+                job
         ).setVisible(true);
     }
 
-
-    // =========================
+    // =========================================================
     // DELETE JOB
-    // =========================
+    // =========================================================
 
-    private void deleteSelectedJob() {
+    private void deleteJob(Job job) {
 
-        Job selectedJob =
-                getSelectedJob();
-
-
-        if (selectedJob == null) {
-
+        if (job == null) {
             return;
         }
-
 
         int confirm =
                 JOptionPane.showConfirmDialog(
                         this,
-                        "Are you sure you want to delete this job?",
+                        "Are you sure you want to delete\n"
+                                + "\""
+                                + job.getTitle()
+                                + "\"?",
                         "Confirm Delete",
-                        JOptionPane.YES_NO_OPTION
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE
                 );
-
 
         if (
                 confirm !=
                         JOptionPane.YES_OPTION
         ) {
-
             return;
         }
 
-
         boolean success =
                 jobDAO.deleteJob(
-                        selectedJob.getJobId(),
+                        job.getJobId(),
                         employer.getUserId()
                 );
-
 
         if (success) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Job deleted successfully!"
+                    "Job deleted successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
             );
-
 
             loadJobs();
 
@@ -439,26 +811,300 @@ public class EmployerDashboard extends JFrame {
         }
     }
 
-
-    // =========================
+    // =========================================================
     // VIEW APPLICANTS
-    // =========================
+    // =========================================================
 
-    private void viewApplicants() {
+    private void viewApplicants(Job job) {
 
-        Job selectedJob =
-                getSelectedJob();
-
-
-        if (selectedJob == null) {
-
+        if (job == null) {
             return;
         }
 
-
         new ApplicantManagementFrame(
                 employer,
-                selectedJob
+                job
         ).setVisible(true);
+    }
+
+    // =========================================================
+    // LOGOUT
+    // =========================================================
+
+    private void logout() {
+
+        int confirm =
+                JOptionPane.showConfirmDialog(
+                        this,
+                        "Are you sure you want to logout?",
+                        "Confirm Logout",
+                        JOptionPane.YES_NO_OPTION
+                );
+
+        if (
+                confirm ==
+                        JOptionPane.YES_OPTION
+        ) {
+
+            dispose();
+
+            new LoginFrame()
+                    .setVisible(true);
+        }
+    }
+
+    // =========================================================
+    // BUTTON STYLES
+    // =========================================================
+
+    private JButton createPrimaryButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setBackground(PRIMARY);
+        button.setForeground(Color.WHITE);
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createEmptyBorder(
+                        8,
+                        14,
+                        8,
+                        14
+                )
+        );
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    private JButton createSecondaryButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setBackground(Color.WHITE);
+        button.setForeground(TEXT);
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                7,
+                                13,
+                                7,
+                                13
+                        )
+                )
+        );
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    private JButton createDangerButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setBackground(Color.WHITE);
+        button.setForeground(DANGER);
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(254, 202, 202)
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                7,
+                                13,
+                                7,
+                                13
+                        )
+                )
+        );
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    private JButton createHeaderButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setBackground(
+                new Color(51, 65, 85)
+        );
+
+        button.setForeground(Color.WHITE);
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        12
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createEmptyBorder(
+                        8,
+                        11,
+                        8,
+                        11
+                )
+        );
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    // =========================================================
+    // HELPERS
+    // =========================================================
+
+    private String safe(String value) {
+
+        if (
+                value == null ||
+                        value.trim().isEmpty()
+        ) {
+            return "Not specified";
+        }
+
+        return value.trim();
+    }
+
+    private String formatJobType(
+            String jobType
+    ) {
+
+        if (
+                jobType == null ||
+                        jobType.trim().isEmpty()
+        ) {
+            return "Not specified";
+        }
+
+        if (
+                jobType.equalsIgnoreCase(
+                        "FULL_TIME"
+                )
+        ) {
+            return "Full Time";
+        }
+
+        if (
+                jobType.equalsIgnoreCase(
+                        "PART_TIME"
+                )
+        ) {
+            return "Part Time";
+        }
+
+        return jobType;
+    }
+
+    private String shorten(
+            String text,
+            int maxLength
+    ) {
+
+        if (text == null) {
+            return "";
+        }
+
+        text = text
+                .replace("\n", " ")
+                .trim();
+
+        if (
+                text.length() <= maxLength
+        ) {
+            return text;
+        }
+
+        return text.substring(
+                0,
+                maxLength
+        ) + "...";
+    }
+
+    private String escapeHtml(
+            String text
+    ) {
+
+        if (text == null) {
+            return "";
+        }
+
+        return text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 }

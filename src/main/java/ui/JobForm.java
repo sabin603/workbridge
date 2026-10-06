@@ -24,13 +24,9 @@ public class JobForm extends JFrame {
         this.employer = employer;
 
         setTitle("WorkBridge - Post a Job");
+        setSize(700, 720);
 
-        setSize(600, 650);
-
-        setDefaultCloseOperation(
-                JFrame.DISPOSE_ON_CLOSE
-        );
-
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         createUI();
@@ -38,59 +34,108 @@ public class JobForm extends JFrame {
 
     private void createUI() {
 
-        JPanel panel = new JPanel();
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(245, 247, 250));
 
-        panel.setLayout(null);
+        // ================= HEADER =================
+
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+        headerPanel.setBackground(new Color(25, 35, 50));
+        headerPanel.setBorder(
+                BorderFactory.createEmptyBorder(20, 30, 20, 30)
+        );
 
         JLabel titleLabel =
                 new JLabel("Post a New Job");
 
+        titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        24
+                new Font("Segoe UI", Font.BOLD, 25)
+        );
+
+        JLabel subtitleLabel =
+                new JLabel(
+                        "Create a job opportunity and find the right candidate."
+                );
+
+        subtitleLabel.setForeground(
+                new Color(203, 213, 225)
+        );
+
+        subtitleLabel.setFont(
+                new Font("Segoe UI", Font.PLAIN, 13)
+        );
+
+        headerPanel.add(titleLabel);
+        headerPanel.add(Box.createVerticalStrut(5));
+        headerPanel.add(subtitleLabel);
+
+        mainPanel.add(
+                headerPanel,
+                BorderLayout.NORTH
+        );
+
+        // ================= FORM =================
+
+        JPanel formPanel = new JPanel(
+                new GridBagLayout()
+        );
+
+        formPanel.setBackground(
+                new Color(245, 247, 250)
+        );
+
+        formPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        20, 35, 15, 35
                 )
         );
 
-        titleLabel.setBounds(
-                200, 20, 250, 35
-        );
+        GridBagConstraints gbc =
+                new GridBagConstraints();
 
-        panel.add(titleLabel);
+        gbc.insets =
+                new Insets(7, 7, 7, 7);
 
+        gbc.fill =
+                GridBagConstraints.HORIZONTAL;
+
+        gbc.anchor =
+                GridBagConstraints.NORTHWEST;
 
         // JOB TITLE
 
-        JLabel jobTitleLabel =
-                new JLabel("Job Title:");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0;
 
-        jobTitleLabel.setBounds(
-                50, 80, 120, 25
+        formPanel.add(
+                createLabel("Job Title"),
+                gbc
         );
 
-        panel.add(jobTitleLabel);
+        titleField = new JTextField();
 
-        titleField =
-                new JTextField();
+        styleTextField(titleField);
 
-        titleField.setBounds(
-                180, 80, 350, 25
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+
+        formPanel.add(
+                titleField,
+                gbc
         );
-
-        panel.add(titleField);
-
 
         // CATEGORY
 
-        JLabel categoryLabel =
-                new JLabel("Category:");
+        gbc.gridx = 0;
+        gbc.gridy++;
 
-        categoryLabel.setBounds(
-                50, 120, 120, 25
+        formPanel.add(
+                createLabel("Category"),
+                gbc
         );
-
-        panel.add(categoryLabel);
 
         categoryComboBox =
                 new JComboBox<>(
@@ -103,161 +148,219 @@ public class JobForm extends JFrame {
                                 "Data Entry",
                                 "Marketing",
                                 "Writing",
+                                "Mobile Development",
+                                "Database",
                                 "Other"
                         }
                 );
 
-        categoryComboBox.setBounds(
-                180, 120, 350, 25
+        styleComboBox(categoryComboBox);
+
+        gbc.gridx = 1;
+
+        formPanel.add(
+                categoryComboBox,
+                gbc
         );
-
-        panel.add(categoryComboBox);
-
 
         // DESCRIPTION
 
-        JLabel descriptionLabel =
-                new JLabel("Description:");
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
 
-        descriptionLabel.setBounds(
-                50, 160, 120, 25
+        formPanel.add(
+                createLabel("Description"),
+                gbc
         );
-
-        panel.add(descriptionLabel);
 
         descriptionArea =
-                new JTextArea();
+                new JTextArea(5, 30);
 
-        descriptionArea.setLineWrap(true);
-
-        descriptionArea.setWrapStyleWord(true);
+        styleTextArea(descriptionArea);
 
         JScrollPane descriptionScroll =
-                new JScrollPane(descriptionArea);
+                new JScrollPane(
+                        descriptionArea
+                );
 
-        descriptionScroll.setBounds(
-                180, 160, 350, 80
+        gbc.gridx = 1;
+        gbc.fill =
+                GridBagConstraints.BOTH;
+        gbc.weighty = 0.5;
+
+        formPanel.add(
+                descriptionScroll,
+                gbc
         );
-
-        panel.add(descriptionScroll);
-
 
         // REQUIREMENTS
 
-        JLabel requirementsLabel =
-                new JLabel("Requirements:");
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.fill =
+                GridBagConstraints.HORIZONTAL;
+        gbc.weighty = 0;
 
-        requirementsLabel.setBounds(
-                50, 260, 120, 25
+        formPanel.add(
+                createLabel("Requirements"),
+                gbc
         );
-
-        panel.add(requirementsLabel);
 
         requirementsArea =
-                new JTextArea();
+                new JTextArea(5, 30);
 
-        requirementsArea.setLineWrap(true);
-
-        requirementsArea.setWrapStyleWord(true);
+        styleTextArea(requirementsArea);
 
         JScrollPane requirementsScroll =
-                new JScrollPane(requirementsArea);
+                new JScrollPane(
+                        requirementsArea
+                );
 
-        requirementsScroll.setBounds(
-                180, 260, 350, 100
+        gbc.gridx = 1;
+        gbc.fill =
+                GridBagConstraints.BOTH;
+        gbc.weighty = 0.5;
+
+        formPanel.add(
+                requirementsScroll,
+                gbc
         );
-
-        panel.add(requirementsScroll);
-
 
         // LOCATION
 
-        JLabel locationLabel =
-                new JLabel("Location:");
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.fill =
+                GridBagConstraints.HORIZONTAL;
+        gbc.weighty = 0;
 
-        locationLabel.setBounds(
-                50, 380, 120, 25
+        formPanel.add(
+                createLabel("Location"),
+                gbc
         );
-
-        panel.add(locationLabel);
 
         locationField =
                 new JTextField();
 
-        locationField.setBounds(
-                180, 380, 350, 25
+        styleTextField(locationField);
+
+        gbc.gridx = 1;
+
+        formPanel.add(
+                locationField,
+                gbc
         );
-
-        panel.add(locationField);
-
 
         // SALARY
 
-        JLabel salaryLabel =
-                new JLabel("Salary:");
+        gbc.gridx = 0;
+        gbc.gridy++;
 
-        salaryLabel.setBounds(
-                50, 420, 120, 25
+        formPanel.add(
+                createLabel("Salary"),
+                gbc
         );
-
-        panel.add(salaryLabel);
 
         salaryField =
                 new JTextField();
 
-        salaryField.setBounds(
-                180, 420, 350, 25
+        styleTextField(salaryField);
+
+        salaryField.setToolTipText(
+                "Example: NPR 40,000 - 60,000"
         );
 
-        panel.add(salaryField);
+        gbc.gridx = 1;
 
+        formPanel.add(
+                salaryField,
+                gbc
+        );
 
         // JOB TYPE
 
-        JLabel jobTypeLabel =
-                new JLabel("Job Type:");
+        gbc.gridx = 0;
+        gbc.gridy++;
 
-        jobTypeLabel.setBounds(
-                50, 460, 120, 25
+        formPanel.add(
+                createLabel("Job Type"),
+                gbc
         );
-
-        panel.add(jobTypeLabel);
 
         jobTypeComboBox =
                 new JComboBox<>(
                         new String[]{
                                 "FULL_TIME",
-                                "PART_TIME"
+                                "PART_TIME",
+                                "CONTRACT",
+                                "INTERNSHIP",
+                                "REMOTE"
                         }
                 );
 
-        jobTypeComboBox.setBounds(
-                180, 460, 350, 25
+        styleComboBox(jobTypeComboBox);
+
+        gbc.gridx = 1;
+
+        formPanel.add(
+                jobTypeComboBox,
+                gbc
         );
 
-        panel.add(jobTypeComboBox);
+        mainPanel.add(
+                new JScrollPane(formPanel),
+                BorderLayout.CENTER
+        );
 
+        // ================= BUTTONS =================
 
-        // POST BUTTON
+        JPanel buttonPanel =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.RIGHT,
+                                12,
+                                12
+                        )
+                );
+
+        buttonPanel.setBackground(
+                new Color(245, 247, 250)
+        );
+
+        JButton cancelButton =
+                new JButton("Cancel");
 
         JButton postButton =
                 new JButton("Post Job");
 
-        postButton.setBounds(
-                220, 520, 140, 40
+        styleSecondaryButton(cancelButton);
+        stylePrimaryButton(postButton);
+
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(postButton);
+
+        mainPanel.add(
+                buttonPanel,
+                BorderLayout.SOUTH
         );
 
-        panel.add(postButton);
+        // ================= ACTIONS =================
 
+        cancelButton.addActionListener(
+                e -> dispose()
+        );
 
         postButton.addActionListener(
                 e -> postJob()
         );
 
-
-        add(panel);
+        add(mainPanel);
     }
 
+    // =========================================================
+    // POST JOB
+    // =========================================================
 
     private void postJob() {
 
@@ -284,21 +387,59 @@ public class JobForm extends JFrame {
                 (String) jobTypeComboBox
                         .getSelectedItem();
 
+        // ================= VALIDATION =================
 
-        if (
-                title.isEmpty() ||
-                        description.isEmpty() ||
-                        requirements.isEmpty()
-        ) {
+        if (title.isEmpty()) {
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please fill all required fields."
+            showWarning(
+                    "Please enter the job title."
             );
 
+            titleField.requestFocus();
             return;
         }
 
+        if (description.isEmpty()) {
+
+            showWarning(
+                    "Please enter the job description."
+            );
+
+            descriptionArea.requestFocus();
+            return;
+        }
+
+        if (requirements.isEmpty()) {
+
+            showWarning(
+                    "Please enter the job requirements."
+            );
+
+            requirementsArea.requestFocus();
+            return;
+        }
+
+        if (location.isEmpty()) {
+
+            showWarning(
+                    "Please enter the job location."
+            );
+
+            locationField.requestFocus();
+            return;
+        }
+
+        if (salary.isEmpty()) {
+
+            showWarning(
+                    "Please enter the salary information."
+            );
+
+            salaryField.requestFocus();
+            return;
+        }
+
+        // ================= CREATE JOB =================
 
         Job job =
                 new Job(
@@ -312,19 +453,19 @@ public class JobForm extends JFrame {
                         jobType
                 );
 
-
         JobDAO jobDAO =
                 new JobDAO();
 
         boolean success =
                 jobDAO.createJob(job);
 
-
         if (success) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Job posted successfully!"
+                    "Job posted successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
             );
 
             dispose();
@@ -338,5 +479,154 @@ public class JobForm extends JFrame {
                     JOptionPane.ERROR_MESSAGE
             );
         }
+    }
+
+    // =========================================================
+    // UI HELPERS
+    // =========================================================
+
+    private JLabel createLabel(String text) {
+
+        JLabel label =
+                new JLabel(text);
+
+        label.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        label.setForeground(
+                new Color(31, 41, 55)
+        );
+
+        return label;
+    }
+
+    private void styleTextField(
+            JTextField field
+    ) {
+
+        field.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        field.setPreferredSize(
+                new Dimension(350, 34)
+        );
+    }
+
+    private void styleTextArea(
+            JTextArea area
+    ) {
+
+        area.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+
+        area.setBorder(
+                BorderFactory.createEmptyBorder(
+                        8, 8, 8, 8
+                )
+        );
+    }
+
+    private void styleComboBox(
+            JComboBox<String> comboBox
+    ) {
+
+        comboBox.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        comboBox.setPreferredSize(
+                new Dimension(350, 34)
+        );
+    }
+
+    private void stylePrimaryButton(
+            JButton button
+    ) {
+
+        button.setBackground(
+                new Color(37, 99, 235)
+        );
+
+        button.setForeground(Color.WHITE);
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createEmptyBorder(
+                        10, 20, 10, 20
+                )
+        );
+    }
+
+    private void styleSecondaryButton(
+            JButton button
+    ) {
+
+        button.setBackground(Color.WHITE);
+
+        button.setForeground(
+                new Color(31, 41, 55)
+        );
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(209, 213, 219)
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                9, 18, 9, 18
+                        )
+                )
+        );
+    }
+
+    private void showWarning(String message) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                "Missing Information",
+                JOptionPane.WARNING_MESSAGE
+        );
     }
 }

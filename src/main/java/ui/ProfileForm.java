@@ -5,58 +5,74 @@ import model.User;
 import model.WorkerProfile;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 
 public class ProfileForm extends JFrame {
 
     private User jobSeeker;
-
     private ProfileDAO profileDAO;
 
     private JTextField addressField;
-
     private JTextField phoneField;
-
     private JTextField pictureField;
+    private JTextField cvField;
+    private JTextField headlineField;
+    private JTextField educationField;
 
     private JTextArea skillsArea;
+    private JTextArea experienceArea;
 
     private JLabel nameLabel;
-
     private JLabel emailLabel;
+    private JLabel picturePreview;
 
+    private final Color PRIMARY = new Color(37, 99, 235);
+    private final Color BACKGROUND = new Color(245, 247, 250);
+    private final Color WHITE = Color.WHITE;
+    private final Color TEXT = new Color(31, 41, 55);
+    private final Color MUTED = new Color(107, 114, 128);
 
     public ProfileForm(User user) {
 
         this.jobSeeker = user;
-
         profileDAO = new ProfileDAO();
 
-        setTitle(
-                "WorkBridge - My Profile"
-        );
-
-        setSize(600, 600);
-
-        setDefaultCloseOperation(
-                JFrame.DISPOSE_ON_CLOSE
-        );
-
+        setTitle("WorkBridge - My Profile");
+        setSize(750, 780);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         createUI();
-
         loadProfile();
     }
 
-
     private void createUI() {
 
-        JPanel panel =
-                new JPanel();
+        getContentPane().setBackground(BACKGROUND);
 
-        panel.setLayout(null);
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(BACKGROUND);
+        mainPanel.setBorder(new EmptyBorder(20, 25, 20, 25));
 
+        // =========================
+        // HEADER
+        // =========================
+
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(WHITE);
+        headerPanel.setBorder(
+                new EmptyBorder(18, 20, 18, 20)
+        );
+
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(
+                new BoxLayout(titlePanel, BoxLayout.Y_AXIS)
+        );
+        titlePanel.setBackground(WHITE);
 
         JLabel titleLabel =
                 new JLabel("My Profile");
@@ -65,245 +81,547 @@ public class ProfileForm extends JFrame {
                 new Font(
                         "Arial",
                         Font.BOLD,
-                        24
+                        26
                 )
         );
 
-        titleLabel.setBounds(
-                230,
-                20,
-                150,
-                35
+        titleLabel.setForeground(TEXT);
+
+        JLabel subtitleLabel =
+                new JLabel(
+                        "Build a strong professional profile"
+                );
+
+        subtitleLabel.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        14
+                )
         );
 
-        panel.add(titleLabel);
+        subtitleLabel.setForeground(MUTED);
 
+        titlePanel.add(titleLabel);
+        titlePanel.add(
+                Box.createVerticalStrut(5)
+        );
+        titlePanel.add(subtitleLabel);
 
-        // NAME
-
-        JLabel nameTextLabel =
-                new JLabel("Name:");
-
-        nameTextLabel.setBounds(
-                60,
-                80,
-                100,
-                25
+        headerPanel.add(
+                titlePanel,
+                BorderLayout.WEST
         );
 
-        panel.add(nameTextLabel);
+        mainPanel.add(
+                headerPanel,
+                BorderLayout.NORTH
+        );
 
+
+        // =========================
+        // FORM PANEL
+        // =========================
+
+        JPanel formPanel =
+                new JPanel(new GridBagLayout());
+
+        formPanel.setBackground(WHITE);
+        formPanel.setBorder(
+                new EmptyBorder(
+                        20,
+                        25,
+                        20,
+                        25
+                )
+        );
+
+        GridBagConstraints gbc =
+                new GridBagConstraints();
+
+        gbc.insets =
+                new Insets(
+                        7,
+                        7,
+                        7,
+                        7
+                );
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+
+        // =========================
+        // PROFILE PICTURE
+        // =========================
+
+        picturePreview =
+                new JLabel();
+
+        picturePreview.setPreferredSize(
+                new Dimension(100, 100)
+        );
+
+        picturePreview.setHorizontalAlignment(
+                SwingConstants.CENTER
+        );
+
+        picturePreview.setVerticalAlignment(
+                SwingConstants.CENTER
+        );
+
+        picturePreview.setBorder(
+                BorderFactory.createLineBorder(
+                        new Color(209, 213, 219)
+                )
+        );
+
+        picturePreview.setText("Photo");
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridheight = 4;
+        gbc.weightx = 0;
+
+        formPanel.add(
+                picturePreview,
+                gbc
+        );
+
+
+        JPanel identityPanel =
+                new JPanel();
+
+        identityPanel.setLayout(
+                new BoxLayout(
+                        identityPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        identityPanel.setBackground(WHITE);
 
         nameLabel =
                 new JLabel(
                         jobSeeker.getName()
                 );
 
-        nameLabel.setBounds(
-                180,
-                80,
-                350,
-                25
+        nameLabel.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        20
+                )
         );
 
-        panel.add(nameLabel);
-
-
-        // EMAIL
-
-        JLabel emailTextLabel =
-                new JLabel("Email:");
-
-        emailTextLabel.setBounds(
-                60,
-                120,
-                100,
-                25
-        );
-
-        panel.add(emailTextLabel);
-
+        nameLabel.setForeground(TEXT);
 
         emailLabel =
                 new JLabel(
                         jobSeeker.getEmail()
                 );
 
-        emailLabel.setBounds(
-                180,
-                120,
-                350,
-                25
+        emailLabel.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        13
+                )
         );
 
-        panel.add(emailLabel);
+        emailLabel.setForeground(MUTED);
+
+        identityPanel.add(nameLabel);
+        identityPanel.add(
+                Box.createVerticalStrut(5)
+        );
+        identityPanel.add(emailLabel);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.gridheight = 2;
+        gbc.weightx = 1;
+
+        formPanel.add(
+                identityPanel,
+                gbc
+        );
 
 
+        JButton browsePictureButton =
+                new JButton("Choose Picture");
+
+        styleButton(
+                browsePictureButton,
+                PRIMARY
+        );
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.gridheight = 1;
+        gbc.weightx = 1;
+
+        formPanel.add(
+                browsePictureButton,
+                gbc
+        );
+
+
+        // =========================
+        // HEADLINE
+        // =========================
+
+        gbc.gridheight = 1;
+
+        addLabel(
+                formPanel,
+                gbc,
+                "Professional Headline",
+                0,
+                4
+        );
+
+        headlineField =
+                new JTextField();
+
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1;
+
+        formPanel.add(
+                headlineField,
+                gbc
+        );
+
+
+        // =========================
         // ADDRESS
+        // =========================
 
-        JLabel addressLabel =
-                new JLabel("Address:");
-
-        addressLabel.setBounds(
-                60,
-                160,
-                100,
-                25
+        addLabel(
+                formPanel,
+                gbc,
+                "Address",
+                0,
+                5
         );
-
-        panel.add(addressLabel);
-
 
         addressField =
                 new JTextField();
 
-        addressField.setBounds(
-                180,
-                160,
-                350,
-                25
+        addField(
+                formPanel,
+                gbc,
+                addressField,
+                5
         );
 
-        panel.add(addressField);
 
-
+        // =========================
         // PHONE
+        // =========================
 
-        JLabel phoneLabel =
-                new JLabel("Phone:");
-
-        phoneLabel.setBounds(
-                60,
-                200,
-                100,
-                25
+        addLabel(
+                formPanel,
+                gbc,
+                "Phone",
+                0,
+                6
         );
-
-        panel.add(phoneLabel);
-
 
         phoneField =
                 new JTextField();
 
-        phoneField.setBounds(
-                180,
-                200,
-                350,
-                25
+        addField(
+                formPanel,
+                gbc,
+                phoneField,
+                6
         );
 
-        panel.add(phoneField);
 
+        // =========================
+        // EDUCATION
+        // =========================
 
-        // PROFILE PICTURE
-
-        JLabel pictureLabel =
-                new JLabel("Profile Picture:");
-
-        pictureLabel.setBounds(
-                60,
-                240,
-                110,
-                25
+        addLabel(
+                formPanel,
+                gbc,
+                "Education",
+                0,
+                7
         );
 
-        panel.add(pictureLabel);
-
-
-        pictureField =
+        educationField =
                 new JTextField();
 
-        pictureField.setBounds(
-                180,
-                240,
-                250,
-                25
+        addField(
+                formPanel,
+                gbc,
+                educationField,
+                7
         );
 
-        panel.add(pictureField);
 
-
-        JButton browseButton =
-                new JButton("Browse");
-
-        browseButton.setBounds(
-                440,
-                240,
-                90,
-                25
-        );
-
-        panel.add(browseButton);
-
-
+        // =========================
         // SKILLS
+        // =========================
 
-        JLabel skillsLabel =
-                new JLabel("Skills:");
-
-        skillsLabel.setBounds(
-                60,
-                290,
-                100,
-                25
+        addLabel(
+                formPanel,
+                gbc,
+                "Skills",
+                0,
+                8
         );
-
-        panel.add(skillsLabel);
-
 
         skillsArea =
-                new JTextArea();
+                new JTextArea(3, 20);
 
         skillsArea.setLineWrap(true);
-
         skillsArea.setWrapStyleWord(true);
-
 
         JScrollPane skillsScroll =
                 new JScrollPane(
                         skillsArea
                 );
 
-        skillsScroll.setBounds(
-                180,
-                290,
-                350,
-                120
+        gbc.gridx = 1;
+        gbc.gridy = 8;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+
+        formPanel.add(
+                skillsScroll,
+                gbc
         );
 
-        panel.add(skillsScroll);
+
+        // =========================
+        // EXPERIENCE
+        // =========================
+
+        addLabel(
+                formPanel,
+                gbc,
+                "Experience",
+                0,
+                9
+        );
+
+        experienceArea =
+                new JTextArea(4, 20);
+
+        experienceArea.setLineWrap(true);
+        experienceArea.setWrapStyleWord(true);
+
+        JScrollPane experienceScroll =
+                new JScrollPane(
+                        experienceArea
+                );
+
+        gbc.gridx = 1;
+        gbc.gridy = 9;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1;
+
+        formPanel.add(
+                experienceScroll,
+                gbc
+        );
 
 
-        // SAVE BUTTON
+        // =========================
+        // CV
+        // =========================
+
+        addLabel(
+                formPanel,
+                gbc,
+                "CV / Resume",
+                0,
+                10
+        );
+
+        cvField =
+                new JTextField();
+
+        cvField.setEditable(false);
+
+        gbc.gridx = 1;
+        gbc.gridy = 10;
+        gbc.gridwidth = 1;
+        gbc.weightx = 1;
+
+        formPanel.add(
+                cvField,
+                gbc
+        );
+
+
+        JButton browseCVButton =
+                new JButton("Choose CV");
+
+        styleButton(
+                browseCVButton,
+                PRIMARY
+        );
+
+        gbc.gridx = 2;
+        gbc.gridy = 10;
+        gbc.gridwidth = 1;
+
+        formPanel.add(
+                browseCVButton,
+                gbc
+        );
+
+
+        // =========================
+        // SAVE
+        // =========================
 
         JButton saveButton =
                 new JButton("Save Profile");
 
-        saveButton.setBounds(
-                210,
-                450,
-                150,
-                40
+        styleButton(
+                saveButton,
+                PRIMARY
         );
 
-        panel.add(saveButton);
+        saveButton.setPreferredSize(
+                new Dimension(
+                        160,
+                        42
+                )
+        );
+
+        gbc.gridx = 1;
+        gbc.gridy = 11;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+
+        formPanel.add(
+                saveButton,
+                gbc
+        );
 
 
-        // BROWSE BUTTON
+        JScrollPane formScroll =
+                new JScrollPane(
+                        formPanel
+                );
 
-        browseButton.addActionListener(
+        formScroll.setBorder(null);
+        formScroll.getVerticalScrollBar()
+                .setUnitIncrement(16);
+
+        mainPanel.add(
+                formScroll,
+                BorderLayout.CENTER
+        );
+
+        add(mainPanel);
+
+
+        // =========================
+        // ACTIONS
+        // =========================
+
+        browsePictureButton.addActionListener(
                 e -> choosePicture()
         );
 
-
-        // SAVE BUTTON
+        browseCVButton.addActionListener(
+                e -> chooseCV()
+        );
 
         saveButton.addActionListener(
                 e -> saveProfile()
         );
+    }
 
 
-        add(panel);
+    // =========================
+    // ADD LABEL
+    // =========================
+
+    private void addLabel(
+            JPanel panel,
+            GridBagConstraints gbc,
+            String text,
+            int x,
+            int y
+    ) {
+
+        JLabel label =
+                new JLabel(text);
+
+        label.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        label.setForeground(TEXT);
+
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
+
+        panel.add(
+                label,
+                gbc
+        );
+    }
+
+
+    // =========================
+    // ADD FIELD
+    // =========================
+
+    private void addField(
+            JPanel panel,
+            GridBagConstraints gbc,
+            JTextField field,
+            int y
+    ) {
+
+        gbc.gridx = 1;
+        gbc.gridy = y;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1;
+
+        panel.add(
+                field,
+                gbc
+        );
+    }
+
+
+    // =========================
+    // BUTTON STYLE
+    // =========================
+
+    private void styleButton(
+            JButton button,
+            Color color
+    ) {
+
+        button.setFocusPainted(false);
+        button.setBackground(color);
+        button.setForeground(Color.WHITE);
+        button.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        13
+                )
+        );
     }
 
 
@@ -318,53 +636,245 @@ public class ProfileForm extends JFrame {
                         jobSeeker.getUserId()
                 );
 
+        if (profile == null) {
+            return;
+        }
 
-        if (profile != null) {
+        addressField.setText(
+                safe(profile.getAddress())
+        );
 
-            addressField.setText(
-                    profile.getAddress()
-            );
+        phoneField.setText(
+                safe(profile.getPhone())
+        );
 
-            phoneField.setText(
-                    profile.getPhone()
-            );
+        pictureFieldSet(
+                safe(profile.getProfilePicture())
+        );
+
+        skillsArea.setText(
+                safe(profile.getSkills())
+        );
+
+        headlineField.setText(
+                safe(profile.getHeadline())
+        );
+
+        educationField.setText(
+                safe(profile.getEducation())
+        );
+
+        experienceArea.setText(
+                safe(profile.getExperience())
+        );
+
+        cvField.setText(
+                safe(profile.getCvPath())
+        );
+
+        loadPicturePreview(
+                profile.getProfilePicture()
+        );
+    }
+
+
+    // =========================
+    // SAFE STRING
+    // =========================
+
+    private String safe(String value) {
+
+        return value == null
+                ? ""
+                : value;
+    }
+
+
+    // =========================
+    // PICTURE FIELD
+    // =========================
+
+    private void pictureFieldSet(
+            String value
+    ) {
+
+        pictureField =
+                new JTextField();
+
+        pictureField.setText(value);
+    }
+
+
+    // =========================
+    // CHOOSE PICTURE
+    // =========================
+
+    private void choosePicture() {
+
+        JFileChooser chooser =
+                new JFileChooser();
+
+        chooser.setDialogTitle(
+                "Select Profile Picture"
+        );
+
+        chooser.setFileFilter(
+                new FileNameExtensionFilter(
+                        "Image Files",
+                        "jpg",
+                        "jpeg",
+                        "png"
+                )
+        );
+
+        int result =
+                chooser.showOpenDialog(this);
+
+        if (result ==
+                JFileChooser.APPROVE_OPTION) {
+
+            File file =
+                    chooser.getSelectedFile();
+
+            String name =
+                    file.getName()
+                            .toLowerCase();
+
+            if (!name.endsWith(".jpg")
+                    && !name.endsWith(".jpeg")
+                    && !name.endsWith(".png")) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Please select a JPG, JPEG or PNG image.",
+                        "Invalid Image",
+                        JOptionPane.WARNING_MESSAGE
+                );
+
+                return;
+            }
+
+            ensurePictureField();
 
             pictureField.setText(
-                    profile.getProfilePicture()
+                    file.getAbsolutePath()
             );
 
-            skillsArea.setText(
-                    profile.getSkills()
+            loadPicturePreview(
+                    file.getAbsolutePath()
             );
         }
     }
 
 
     // =========================
-    // CHOOSE PROFILE PICTURE
+    // ENSURE PICTURE FIELD
     // =========================
 
-    private void choosePicture() {
+    private void ensurePictureField() {
 
-        JFileChooser fileChooser =
+        if (pictureField == null) {
+
+            pictureField =
+                    new JTextField();
+        }
+    }
+
+
+    // =========================
+    // LOAD PICTURE PREVIEW
+    // =========================
+
+    private void loadPicturePreview(
+            String path
+    ) {
+
+        if (path == null
+                || path.trim().isEmpty()) {
+
+            picturePreview.setIcon(null);
+            picturePreview.setText("Photo");
+
+            return;
+        }
+
+        File file =
+                new File(path);
+
+        if (!file.exists()) {
+
+            picturePreview.setIcon(null);
+            picturePreview.setText("Photo");
+
+            return;
+        }
+
+        ImageIcon original =
+                new ImageIcon(path);
+
+        Image image =
+                original.getImage()
+                        .getScaledInstance(
+                                100,
+                                100,
+                                Image.SCALE_SMOOTH
+                        );
+
+        picturePreview.setText("");
+
+        picturePreview.setIcon(
+                new ImageIcon(image)
+        );
+    }
+
+
+    // =========================
+    // CHOOSE CV
+    // =========================
+
+    private void chooseCV() {
+
+        JFileChooser chooser =
                 new JFileChooser();
 
+        chooser.setDialogTitle(
+                "Select CV / Resume"
+        );
+
+        chooser.setFileFilter(
+                new FileNameExtensionFilter(
+                        "PDF Files",
+                        "pdf"
+                )
+        );
 
         int result =
-                fileChooser.showOpenDialog(
-                        this
+                chooser.showOpenDialog(this);
+
+        if (result ==
+                JFileChooser.APPROVE_OPTION) {
+
+            File file =
+                    chooser.getSelectedFile();
+
+            String name =
+                    file.getName()
+                            .toLowerCase();
+
+            if (!name.endsWith(".pdf")) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Please select a PDF file.",
+                        "Invalid CV",
+                        JOptionPane.WARNING_MESSAGE
                 );
 
+                return;
+            }
 
-        if (
-                result ==
-                        JFileChooser.APPROVE_OPTION
-        ) {
-
-            pictureField.setText(
-                    fileChooser
-                            .getSelectedFile()
-                            .getAbsolutePath()
+            cvField.setText(
+                    file.getAbsolutePath()
             );
         }
     }
@@ -376,39 +886,54 @@ public class ProfileForm extends JFrame {
 
     private void saveProfile() {
 
-        String address =
-                addressField
-                        .getText()
-                        .trim();
+        ensurePictureField();
 
+        String address =
+                addressField.getText()
+                        .trim();
 
         String phone =
-                phoneField
-                        .getText()
+                phoneField.getText()
                         .trim();
-
 
         String picture =
-                pictureField
-                        .getText()
+                pictureField.getText()
                         .trim();
 
+        String headline =
+                headlineField.getText()
+                        .trim();
+
+        String education =
+                educationField.getText()
+                        .trim();
 
         String skills =
-                skillsArea
-                        .getText()
+                skillsArea.getText()
+                        .trim();
+
+        String experience =
+                experienceArea.getText()
+                        .trim();
+
+        String cv =
+                cvField.getText()
                         .trim();
 
 
-        if (
-                address.isEmpty() ||
-                        phone.isEmpty() ||
-                        skills.isEmpty()
-        ) {
+        // =========================
+        // VALIDATION
+        // =========================
+
+        if (address.isEmpty()
+                || phone.isEmpty()
+                || skills.isEmpty()) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Please fill address, phone and skills."
+                    "Please fill address, phone and skills.",
+                    "Missing Information",
+                    JOptionPane.WARNING_MESSAGE
             );
 
             return;
@@ -420,9 +945,12 @@ public class ProfileForm extends JFrame {
                         jobSeeker.getUserId()
                 );
 
-
         boolean success;
 
+
+        // =========================
+        // CREATE
+        // =========================
 
         if (profile == null) {
 
@@ -435,22 +963,66 @@ public class ProfileForm extends JFrame {
                             skills
                     );
 
+            profile.setHeadline(
+                    headline
+            );
+
+            profile.setEducation(
+                    education
+            );
+
+            profile.setExperience(
+                    experience
+            );
+
+            profile.setCvPath(
+                    cv
+            );
+
             success =
                     profileDAO.createProfile(
                             profile
                     );
+        }
 
-        } else {
 
-            profile.setAddress(address);
+        // =========================
+        // UPDATE
+        // =========================
 
-            profile.setPhone(phone);
+        else {
+
+            profile.setAddress(
+                    address
+            );
+
+            profile.setPhone(
+                    phone
+            );
 
             profile.setProfilePicture(
                     picture
             );
 
-            profile.setSkills(skills);
+            profile.setHeadline(
+                    headline
+            );
+
+            profile.setEducation(
+                    education
+            );
+
+            profile.setExperience(
+                    experience
+            );
+
+            profile.setSkills(
+                    skills
+            );
+
+            profile.setCvPath(
+                    cv
+            );
 
             success =
                     profileDAO.updateProfile(
@@ -459,12 +1031,20 @@ public class ProfileForm extends JFrame {
         }
 
 
+        // =========================
+        // RESULT
+        // =========================
+
         if (success) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Profile saved successfully!"
+                    "Profile updated successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
             );
+
+            loadProfile();
 
         } else {
 

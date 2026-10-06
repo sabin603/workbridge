@@ -10,7 +10,10 @@ import java.sql.SQLException;
 
 public class ProfileDAO {
 
+    // =========================
     // GET PROFILE
+    // =========================
+
     public WorkerProfile getProfile(int userId) {
 
         String sql = """
@@ -61,6 +64,22 @@ public class ProfileDAO {
                         result.getString("skills")
                 );
 
+                profile.setHeadline(
+                        result.getString("headline")
+                );
+
+                profile.setEducation(
+                        result.getString("education")
+                );
+
+                profile.setExperience(
+                        result.getString("experience")
+                );
+
+                profile.setCvPath(
+                        result.getString("cv_path")
+                );
+
                 return profile;
             }
 
@@ -76,16 +95,28 @@ public class ProfileDAO {
     }
 
 
+    // =========================
     // CREATE PROFILE
+    // =========================
+
     public boolean createProfile(
             WorkerProfile profile
     ) {
 
         String sql = """
                 INSERT INTO worker_profiles
-                (user_id, address, phone,
-                 profile_picture, skills)
-                VALUES (?, ?, ?, ?, ?)
+                (
+                    user_id,
+                    address,
+                    phone,
+                    profile_picture,
+                    skills,
+                    headline,
+                    education,
+                    experience,
+                    cv_path
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (
@@ -121,6 +152,26 @@ public class ProfileDAO {
                     profile.getSkills()
             );
 
+            statement.setString(
+                    6,
+                    profile.getHeadline()
+            );
+
+            statement.setString(
+                    7,
+                    profile.getEducation()
+            );
+
+            statement.setString(
+                    8,
+                    profile.getExperience()
+            );
+
+            statement.setString(
+                    9,
+                    profile.getCvPath()
+            );
+
             statement.executeUpdate();
 
             return true;
@@ -137,17 +188,25 @@ public class ProfileDAO {
     }
 
 
+    // =========================
     // UPDATE PROFILE
+    // =========================
+
     public boolean updateProfile(
             WorkerProfile profile
     ) {
 
         String sql = """
                 UPDATE worker_profiles
-                SET address = ?,
+                SET
+                    address = ?,
                     phone = ?,
                     profile_picture = ?,
-                    skills = ?
+                    skills = ?,
+                    headline = ?,
+                    education = ?,
+                    experience = ?,
+                    cv_path = ?
                 WHERE user_id = ?
                 """;
 
@@ -179,14 +238,35 @@ public class ProfileDAO {
                     profile.getSkills()
             );
 
-            statement.setInt(
+            statement.setString(
                     5,
+                    profile.getHeadline()
+            );
+
+            statement.setString(
+                    6,
+                    profile.getEducation()
+            );
+
+            statement.setString(
+                    7,
+                    profile.getExperience()
+            );
+
+            statement.setString(
+                    8,
+                    profile.getCvPath()
+            );
+
+            statement.setInt(
+                    9,
                     profile.getUserId()
             );
 
-            statement.executeUpdate();
+            int rows =
+                    statement.executeUpdate();
 
-            return true;
+            return rows > 0;
 
         } catch (SQLException e) {
 

@@ -6,420 +6,520 @@ import model.Job;
 import model.User;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
 public class JobSeekerDashboard extends JFrame {
 
     private User jobSeeker;
-
     private JobDAO jobDAO;
     private ApplicationDAO applicationDAO;
 
-    private JTable jobTable;
-    private DefaultTableModel tableModel;
-
     private JTextField searchField;
-
     private JComboBox<String> categoryComboBox;
     private JComboBox<String> jobTypeComboBox;
+    private JPanel jobsPanel;
 
+    private final Color BACKGROUND = new Color(245, 247, 250);
+    private final Color HEADER = new Color(25, 35, 50);
+    private final Color TEXT = new Color(31, 41, 55);
+    private final Color SECONDARY_TEXT = new Color(107, 114, 128);
+    private final Color PRIMARY = new Color(37, 99, 235);
+    private final Color BORDER = new Color(229, 231, 235);
 
     public JobSeekerDashboard(User user) {
-
         this.jobSeeker = user;
-
-        jobDAO = new JobDAO();
-        applicationDAO = new ApplicationDAO();
+        this.jobDAO = new JobDAO();
+        this.applicationDAO = new ApplicationDAO();
 
         setTitle("WorkBridge - Job Seeker Dashboard");
-
-        setSize(900, 600);
-
-        setDefaultCloseOperation(
-                JFrame.EXIT_ON_CLOSE
-        );
-
+        setSize(1000, 700);
+        setMinimumSize(new Dimension(900, 600));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         createUI();
-
         loadJobs();
     }
 
-
     private void createUI() {
 
-        setLayout(
-                new BorderLayout()
+        getContentPane().setBackground(BACKGROUND);
+        setLayout(new BorderLayout());
+
+        // ================= HEADER =================
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(HEADER);
+        headerPanel.setBorder(
+                BorderFactory.createEmptyBorder(18, 25, 18, 25)
         );
 
+        JPanel brandPanel = new JPanel();
+        brandPanel.setLayout(new BoxLayout(brandPanel, BoxLayout.Y_AXIS));
+        brandPanel.setOpaque(false);
 
-        // =========================
-        // MAIN TOP CONTAINER
-        // =========================
+        JLabel titleLabel = new JLabel("WorkBridge");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 25));
 
-        JPanel northPanel =
-                new JPanel(
-                        new BorderLayout()
-                );
+        JLabel subtitleLabel = new JLabel("Find your next opportunity");
+        subtitleLabel.setForeground(new Color(203, 213, 225));
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
+        brandPanel.add(titleLabel);
+        brandPanel.add(Box.createVerticalStrut(3));
+        brandPanel.add(subtitleLabel);
 
-        // =========================
-        // WELCOME + BUTTON PANEL
-        // =========================
+        JPanel rightHeaderPanel = new JPanel();
+        rightHeaderPanel.setLayout(new BoxLayout(rightHeaderPanel, BoxLayout.Y_AXIS));
+        rightHeaderPanel.setOpaque(false);
 
-        JPanel topPanel =
-                new JPanel(
-                        new BorderLayout()
-                );
+        JLabel welcomeLabel = new JLabel(
+                "Welcome, " + safe(jobSeeker.getName())
+        );
+        welcomeLabel.setForeground(Color.WHITE);
+        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        welcomeLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
+        JPanel buttonPanel = new JPanel(
+                new FlowLayout(FlowLayout.RIGHT, 6, 0)
+        );
+        buttonPanel.setOpaque(false);
 
-        JLabel welcomeLabel =
-                new JLabel(
-                        "Welcome, "
-                                + jobSeeker.getName()
-                );
+        JButton matchingButton = createHeaderButton("Find Matching Jobs");
+        JButton applicationsButton = createHeaderButton("My Applications");
+        JButton profileButton = createHeaderButton("My Profile");
+        JButton backButton = createHeaderButton("Logout");
 
+        buttonPanel.add(matchingButton);
+        buttonPanel.add(applicationsButton);
+        buttonPanel.add(profileButton);
+        buttonPanel.add(backButton);
 
-        welcomeLabel.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        20
+        rightHeaderPanel.add(welcomeLabel);
+        rightHeaderPanel.add(Box.createVerticalStrut(10));
+        rightHeaderPanel.add(buttonPanel);
+
+        headerPanel.add(brandPanel, BorderLayout.WEST);
+        headerPanel.add(rightHeaderPanel, BorderLayout.EAST);
+
+        add(headerPanel, BorderLayout.NORTH);
+
+        // ================= MAIN PANEL =================
+        JPanel mainPanel = new JPanel(new BorderLayout(0, 12));
+        mainPanel.setBackground(BACKGROUND);
+        mainPanel.setBorder(
+                BorderFactory.createEmptyBorder(15, 20, 15, 20)
+        );
+
+        // ================= SEARCH PANEL =================
+        JPanel searchPanel = new JPanel(new BorderLayout(10, 10));
+        searchPanel.setBackground(Color.WHITE);
+        searchPanel.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(BORDER),
+                        BorderFactory.createEmptyBorder(12, 15, 12, 15)
                 )
         );
 
+        searchField = new JTextField();
+        searchField.setPreferredSize(new Dimension(250, 38));
+        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        topPanel.add(
-                welcomeLabel,
-                BorderLayout.WEST
+        categoryComboBox = new JComboBox<>(new String[]{
+                "All Categories",
+                "Frontend",
+                "Backend",
+                "Full Stack",
+                "UI/UX Design",
+                "Graphic Design",
+                "Data Entry",
+                "Marketing",
+                "Writing",
+                "Other"
+        });
+        categoryComboBox.setPreferredSize(new Dimension(160, 38));
+        categoryComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+        jobTypeComboBox = new JComboBox<>(new String[]{
+                "All Types",
+                "FULL_TIME",
+                "PART_TIME"
+        });
+        jobTypeComboBox.setPreferredSize(new Dimension(130, 38));
+        jobTypeComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+        JButton searchButton = new JButton("Search");
+        searchButton.setPreferredSize(new Dimension(90, 38));
+        stylePrimaryButton(searchButton);
+
+        JButton resetButton = new JButton("Reset");
+        resetButton.setPreferredSize(new Dimension(80, 38));
+        styleSecondaryButton(resetButton);
+
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.setPreferredSize(new Dimension(85, 38));
+        styleSecondaryButton(refreshButton);
+
+        JPanel searchControls = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 8, 0)
+        );
+        searchControls.setOpaque(false);
+
+        searchControls.add(createSearchLabel("Search:"));
+        searchControls.add(searchField);
+        searchControls.add(createSearchLabel("Category:"));
+        searchControls.add(categoryComboBox);
+        searchControls.add(createSearchLabel("Type:"));
+        searchControls.add(jobTypeComboBox);
+        searchControls.add(searchButton);
+        searchControls.add(resetButton);
+        searchControls.add(refreshButton);
+
+        searchPanel.add(searchControls, BorderLayout.CENTER);
+
+        mainPanel.add(searchPanel, BorderLayout.NORTH);
+
+        // ================= JOBS SECTION =================
+        JPanel jobsSection = new JPanel(new BorderLayout(0, 8));
+        jobsSection.setOpaque(false);
+
+        JPanel sectionHeader = new JPanel(new BorderLayout());
+        sectionHeader.setOpaque(false);
+
+        JLabel availableJobsLabel = new JLabel("Available Jobs");
+        availableJobsLabel.setFont(
+                new Font("Segoe UI", Font.BOLD, 21)
+        );
+        availableJobsLabel.setForeground(TEXT);
+
+        JLabel sectionDescription = new JLabel(
+                "Explore opportunities and apply for jobs that match your skills."
+        );
+        sectionDescription.setFont(
+                new Font("Segoe UI", Font.PLAIN, 13)
+        );
+        sectionDescription.setForeground(SECONDARY_TEXT);
+
+        JPanel sectionText = new JPanel();
+        sectionText.setLayout(new BoxLayout(sectionText, BoxLayout.Y_AXIS));
+        sectionText.setOpaque(false);
+
+        sectionText.add(availableJobsLabel);
+        sectionText.add(Box.createVerticalStrut(3));
+        sectionText.add(sectionDescription);
+
+        sectionHeader.add(sectionText, BorderLayout.WEST);
+
+        jobsSection.add(sectionHeader, BorderLayout.NORTH);
+
+        // ================= JOB CARDS =================
+        jobsPanel = new JPanel();
+        jobsPanel.setLayout(
+                new BoxLayout(jobsPanel, BoxLayout.Y_AXIS)
+        );
+        jobsPanel.setBackground(BACKGROUND);
+        jobsPanel.setBorder(
+                BorderFactory.createEmptyBorder(5, 2, 20, 2)
         );
 
+        JScrollPane scrollPane = new JScrollPane(jobsPanel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setBackground(BACKGROUND);
+        scrollPane.getViewport().setBackground(BACKGROUND);
+        scrollPane.setHorizontalScrollBarPolicy(
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        );
+        scrollPane.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+        );
 
-        // =========================
-        // TOP RIGHT BUTTONS
-        // =========================
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        JButton profileButton =
-                new JButton("My Profile");
+        jobsSection.add(scrollPane, BorderLayout.CENTER);
 
+        mainPanel.add(jobsSection, BorderLayout.CENTER);
 
-        JButton applicationsButton =
-                new JButton("My Applications");
-        JButton matchingButton = new JButton("Find Matching Jobs");
+        add(mainPanel, BorderLayout.CENTER);
+
+        // ================= ACTIONS =================
+
+        searchButton.addActionListener(e -> searchJobs());
+
+        resetButton.addActionListener(e -> resetSearch());
+
+        refreshButton.addActionListener(e -> loadJobs());
+
         matchingButton.addActionListener(e -> {
             new JobRecommendationFrame(jobSeeker).setVisible(true);
         });
 
-        JPanel buttonPanel =
-                new JPanel(
-                        new FlowLayout(
-                                FlowLayout.RIGHT
-                        )
-                );
-
-        buttonPanel.add(matchingButton);
-        buttonPanel.add(
-                applicationsButton
-        );
-
-
-        buttonPanel.add(
-                profileButton
-        );
-
-
-        topPanel.add(
-                buttonPanel,
-                BorderLayout.EAST
-        );
-
-
-        northPanel.add(
-                topPanel,
-                BorderLayout.NORTH
-        );
-
-
-        // =========================
-        // SEARCH PANEL
-        // =========================
-
-        JPanel searchPanel =
-                new JPanel();
-
-
-        searchPanel.add(
-                new JLabel("Search:")
-        );
-
-
-        searchField =
-                new JTextField(15);
-
-
-        searchPanel.add(
-                searchField
-        );
-
-
-        searchPanel.add(
-                new JLabel("Category:")
-        );
-
-
-        categoryComboBox =
-                new JComboBox<>(
-                        new String[]{
-                                "All Categories",
-                                "Frontend",
-                                "Backend",
-                                "Full Stack",
-                                "UI/UX Design",
-                                "Graphic Design",
-                                "Data Entry",
-                                "Marketing",
-                                "Writing",
-                                "Other"
-                        }
-                );
-
-
-        searchPanel.add(
-                categoryComboBox
-        );
-
-
-        searchPanel.add(
-                new JLabel("Job Type:")
-        );
-
-
-        jobTypeComboBox =
-                new JComboBox<>(
-                        new String[]{
-                                "All Types",
-                                "FULL_TIME",
-                                "PART_TIME"
-                        }
-                );
-
-
-        searchPanel.add(
-                jobTypeComboBox
-        );
-
-
-        JButton searchButton =
-                new JButton("Search");
-
-
-        searchPanel.add(
-                searchButton
-        );
-
-
-        JButton resetButton =
-                new JButton("Reset");
-
-
-        searchPanel.add(
-                resetButton
-        );
-
-
-        northPanel.add(
-                searchPanel,
-                BorderLayout.SOUTH
-        );
-
-
-        // Add complete top section
-        add(
-                northPanel,
-                BorderLayout.NORTH
-        );
-
-
-        // =========================
-        // JOB TABLE
-        // =========================
-
-        String[] columns = {
-
-                "ID",
-                "Title",
-                "Category",
-                "Location",
-                "Salary",
-                "Job Type"
-        };
-
-
-        tableModel =
-                new DefaultTableModel(
-                        columns,
-                        0
-                ) {
-
-                    @Override
-                    public boolean isCellEditable(
-                            int row,
-                            int column
-                    ) {
-
-                        return false;
-                    }
-                };
-
-
-        jobTable =
-                new JTable(tableModel);
-
-
-        JScrollPane scrollPane =
-                new JScrollPane(jobTable);
-
-
-        add(
-                scrollPane,
-                BorderLayout.CENTER
-        );
-
-
-        // =========================
-        // BOTTOM PANEL
-        // =========================
-
-        JPanel bottomPanel =
-                new JPanel();
-
-
-        JButton viewButton =
-                new JButton("View Details");
-
-
-        JButton applyButton =
-                new JButton("Apply");
-
-
-        JButton refreshButton =
-                new JButton("Refresh");
-
-
-        bottomPanel.add(
-                viewButton
-        );
-
-
-        bottomPanel.add(
-                applyButton
-        );
-
-
-        bottomPanel.add(
-                refreshButton
-        );
-
-
-        add(
-                bottomPanel,
-                BorderLayout.SOUTH
-        );
-
-
-        // =========================
-        // BUTTON ACTIONS
-        // =========================
-
-        searchButton.addActionListener(
-                e -> searchJobs()
-        );
-
-
-        resetButton.addActionListener(
-                e -> resetSearch()
-        );
-
-
-        refreshButton.addActionListener(
-                e -> loadJobs()
-        );
-
-
-        viewButton.addActionListener(
-                e -> viewSelectedJob()
-        );
-
-
-        applyButton.addActionListener(
-                e -> applyForSelectedJob()
-        );
-
-
-        // =========================
-        // MY PROFILE ACTION
-        // =========================
-
-        profileButton.addActionListener(e -> {
-
-            new ProfileForm(jobSeeker)
-                    .setVisible(true);
-
+        applicationsButton.addActionListener(e -> {
+            new MyApplicationsFrame(jobSeeker).setVisible(true);
         });
 
+        profileButton.addActionListener(e -> {
+            new ProfileForm(jobSeeker).setVisible(true);
+        });
 
-        // =========================
-        // MY APPLICATIONS ACTION
-        // =========================
+        backButton.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to logout?",
+                    "Logout",
+                    JOptionPane.YES_NO_OPTION
+            );
 
-        applicationsButton.addActionListener(e -> {
-
-            new MyApplicationsFrame(jobSeeker)
-                    .setVisible(true);
-
+            if (result == JOptionPane.YES_OPTION) {
+                dispose();
+                new LoginFrame().setVisible(true);
+            }
         });
     }
 
+    // =========================================================
+    // JOB CARD
+    // =========================================================
 
-    // =========================
-    // LOAD ALL JOBS
-    // =========================
+    private JPanel createJobCard(Job job) {
+
+        JPanel card = new JPanel(new BorderLayout(15, 10));
+        card.setBackground(Color.WHITE);
+
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER, 1
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                17, 20, 17, 20
+                        )
+                )
+        );
+
+        card.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.setMaximumSize(
+                new Dimension(Integer.MAX_VALUE, 220)
+        );
+
+        // ================= LEFT / CENTER INFORMATION =================
+
+        JPanel informationPanel = new JPanel();
+        informationPanel.setOpaque(false);
+        informationPanel.setLayout(
+                new BoxLayout(
+                        informationPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        JLabel jobTitle = new JLabel(
+                safe(job.getTitle())
+        );
+        jobTitle.setFont(
+                new Font("Segoe UI", Font.BOLD, 19)
+        );
+        jobTitle.setForeground(TEXT);
+
+        JLabel categoryLabel = new JLabel(
+                safe(job.getCategory())
+        );
+        categoryLabel.setFont(
+                new Font("Segoe UI", Font.BOLD, 12)
+        );
+        categoryLabel.setForeground(PRIMARY);
+
+        JLabel locationLabel = new JLabel(
+                "Location: " + safe(job.getLocation())
+        );
+        locationLabel.setFont(
+                new Font("Segoe UI", Font.PLAIN, 13)
+        );
+        locationLabel.setForeground(SECONDARY_TEXT);
+
+        JLabel typeLabel = new JLabel(
+                "Job Type: " + formatJobType(job.getJobType())
+        );
+        typeLabel.setFont(
+                new Font("Segoe UI", Font.PLAIN, 13)
+        );
+        typeLabel.setForeground(SECONDARY_TEXT);
+
+        JLabel salaryLabel = new JLabel(
+                "Salary: " + safe(job.getSalary())
+        );
+        salaryLabel.setFont(
+                new Font("Segoe UI", Font.BOLD, 14)
+        );
+        salaryLabel.setForeground(new Color(22, 101, 52));
+
+        String requirements = shorten(
+                safe(job.getRequirements()),
+                180
+        );
+
+        JLabel requirementsLabel = new JLabel(
+                "<html><b>Requirements:</b> "
+                        + escapeHtml(requirements)
+                        + "</html>"
+        );
+
+        requirementsLabel.setFont(
+                new Font("Segoe UI", Font.PLAIN, 13)
+        );
+        requirementsLabel.setForeground(TEXT);
+
+        informationPanel.add(jobTitle);
+        informationPanel.add(Box.createVerticalStrut(5));
+        informationPanel.add(categoryLabel);
+        informationPanel.add(Box.createVerticalStrut(7));
+        informationPanel.add(locationLabel);
+        informationPanel.add(Box.createVerticalStrut(3));
+        informationPanel.add(typeLabel);
+        informationPanel.add(Box.createVerticalStrut(3));
+        informationPanel.add(salaryLabel);
+        informationPanel.add(Box.createVerticalStrut(8));
+        informationPanel.add(requirementsLabel);
+
+        // ================= BUTTONS =================
+
+        JPanel actionPanel = new JPanel(
+                new FlowLayout(FlowLayout.RIGHT, 8, 0)
+        );
+        actionPanel.setOpaque(false);
+
+        JButton viewButton = new JButton("View Details");
+        JButton applyButton = new JButton("Apply Now");
+
+        viewButton.setPreferredSize(
+                new Dimension(120, 38)
+        );
+
+        applyButton.setPreferredSize(
+                new Dimension(110, 38)
+        );
+
+        styleSecondaryButton(viewButton);
+        stylePrimaryButton(applyButton);
+
+        viewButton.addActionListener(e -> {
+            viewJobDetails(job);
+        });
+
+        applyButton.addActionListener(e -> {
+            applyForJob(job);
+        });
+
+        actionPanel.add(viewButton);
+        actionPanel.add(applyButton);
+
+        card.add(informationPanel, BorderLayout.CENTER);
+        card.add(actionPanel, BorderLayout.SOUTH);
+
+        return card;
+    }
+
+    // =========================================================
+    // LOAD JOBS
+    // =========================================================
 
     private void loadJobs() {
 
-        tableModel.setRowCount(0);
+        List<Job> jobs = jobDAO.getAllJobs();
 
-        List<Job> jobs =
-                jobDAO.getAllJobs();
-
-        addJobsToTable(jobs);
+        displayJobs(jobs);
     }
 
+    // =========================================================
+    // DISPLAY JOBS
+    // =========================================================
 
-    // =========================
-    // SEARCH JOBS
-    // =========================
+    private void displayJobs(List<Job> jobs) {
+
+        jobsPanel.removeAll();
+
+        if (jobs == null || jobs.isEmpty()) {
+
+            JPanel emptyPanel = new JPanel();
+            emptyPanel.setLayout(
+                    new BoxLayout(
+                            emptyPanel,
+                            BoxLayout.Y_AXIS
+                    )
+            );
+            emptyPanel.setOpaque(false);
+
+            JLabel noJobsLabel = new JLabel(
+                    "No jobs found"
+            );
+            noJobsLabel.setFont(
+                    new Font(
+                            "Segoe UI",
+                            Font.BOLD,
+                            18
+                    )
+            );
+            noJobsLabel.setForeground(TEXT);
+            noJobsLabel.setAlignmentX(
+                    Component.CENTER_ALIGNMENT
+            );
+
+            JLabel messageLabel = new JLabel(
+                    "Try changing your search or filter."
+            );
+            messageLabel.setFont(
+                    new Font(
+                            "Segoe UI",
+                            Font.PLAIN,
+                            14
+                    )
+            );
+            messageLabel.setForeground(
+                    SECONDARY_TEXT
+            );
+            messageLabel.setAlignmentX(
+                    Component.CENTER_ALIGNMENT
+            );
+
+            emptyPanel.add(Box.createVerticalStrut(60));
+            emptyPanel.add(noJobsLabel);
+            emptyPanel.add(Box.createVerticalStrut(8));
+            emptyPanel.add(messageLabel);
+
+            jobsPanel.add(emptyPanel);
+
+        } else {
+
+            for (Job job : jobs) {
+
+                JPanel card = createJobCard(job);
+
+                jobsPanel.add(card);
+
+                jobsPanel.add(
+                        Box.createVerticalStrut(12)
+                );
+            }
+        }
+
+        jobsPanel.revalidate();
+        jobsPanel.repaint();
+    }
+
+    // =========================================================
+    // SEARCH
+    // =========================================================
 
     private void searchJobs() {
 
         String keyword =
-                searchField
-                        .getText()
-                        .trim();
-
+                searchField.getText().trim();
 
         String category =
-                (String) categoryComboBox
-                        .getSelectedItem();
-
+                (String) categoryComboBox.getSelectedItem();
 
         String jobType =
-                (String) jobTypeComboBox
-                        .getSelectedItem();
-
+                (String) jobTypeComboBox.getSelectedItem();
 
         List<Job> jobs =
                 jobDAO.searchJobs(
@@ -428,25 +528,12 @@ public class JobSeekerDashboard extends JFrame {
                         jobType
                 );
 
-
-        tableModel.setRowCount(0);
-
-        addJobsToTable(jobs);
-
-
-        if (jobs.isEmpty()) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "No jobs found."
-            );
-        }
+        displayJobs(jobs);
     }
 
-
-    // =========================
+    // =========================================================
     // RESET SEARCH
-    // =========================
+    // =========================================================
 
     private void resetSearch() {
 
@@ -459,110 +546,60 @@ public class JobSeekerDashboard extends JFrame {
         loadJobs();
     }
 
-
-    // =========================
-    // ADD JOBS TO TABLE
-    // =========================
-
-    private void addJobsToTable(
-            List<Job> jobs
-    ) {
-
-        for (Job job : jobs) {
-
-            tableModel.addRow(
-                    new Object[]{
-
-                            job.getJobId(),
-
-                            job.getTitle(),
-
-                            job.getCategory(),
-
-                            job.getLocation(),
-
-                            job.getSalary(),
-
-                            job.getJobType()
-                    }
-            );
-        }
-    }
-
-
-    // =========================
+    // =========================================================
     // VIEW JOB DETAILS
-    // =========================
+    // =========================================================
 
-    private void viewSelectedJob() {
+    private void viewJobDetails(Job job) {
 
-        Job selectedJob =
-                getSelectedJob();
+        JTextArea detailsArea =
+                new JTextArea();
 
+        detailsArea.setEditable(false);
+        detailsArea.setLineWrap(true);
+        detailsArea.setWrapStyleWord(true);
 
-        if (selectedJob == null) {
-
-            return;
-        }
-
-
-        String details =
-                """
-                Job Title: %s
-
-                Category: %s
-
-                Description:
-                %s
-
-                Requirements:
-                %s
-
-                Location: %s
-
-                Salary: %s
-
-                Job Type: %s
-                """.formatted(
-
-                        selectedJob.getTitle(),
-
-                        selectedJob.getCategory(),
-
-                        selectedJob.getDescription(),
-
-                        selectedJob.getRequirements(),
-
-                        selectedJob.getLocation(),
-
-                        selectedJob.getSalary(),
-
-                        selectedJob.getJobType()
-                );
-
-
-        JTextArea textArea =
-                new JTextArea(details);
-
-
-        textArea.setEditable(false);
-
-        textArea.setLineWrap(true);
-
-        textArea.setWrapStyleWord(true);
-
-
-        JScrollPane scrollPane =
-                new JScrollPane(textArea);
-
-
-        scrollPane.setPreferredSize(
-                new Dimension(
-                        500,
-                        400
+        detailsArea.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        14
                 )
         );
 
+        String details =
+                "JOB DETAILS\n"
+                        + "==============================\n\n"
+                        + "Title: "
+                        + safe(job.getTitle())
+                        + "\n\n"
+                        + "Category: "
+                        + safe(job.getCategory())
+                        + "\n\n"
+                        + "Location: "
+                        + safe(job.getLocation())
+                        + "\n\n"
+                        + "Salary: "
+                        + safe(job.getSalary())
+                        + "\n\n"
+                        + "Job Type: "
+                        + formatJobType(job.getJobType())
+                        + "\n\n"
+                        + "Description:\n"
+                        + safe(job.getDescription())
+                        + "\n\n"
+                        + "Requirements:\n"
+                        + safe(job.getRequirements());
+
+        detailsArea.setText(details);
+        detailsArea.setCaretPosition(0);
+
+        JScrollPane scrollPane =
+                new JScrollPane(detailsArea);
+
+        scrollPane.setPreferredSize(
+                new Dimension(600, 450)
+        );
 
         JOptionPane.showMessageDialog(
                 this,
@@ -572,91 +609,35 @@ public class JobSeekerDashboard extends JFrame {
         );
     }
 
-
-    // =========================
-    // GET SELECTED JOB
-    // =========================
-
-    private Job getSelectedJob() {
-
-        int selectedRow =
-                jobTable.getSelectedRow();
-
-
-        if (selectedRow == -1) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a job first."
-            );
-
-            return null;
-        }
-
-
-        int jobId =
-                (int) tableModel.getValueAt(
-                        selectedRow,
-                        0
-                );
-
-
-        List<Job> jobs =
-                jobDAO.getAllJobs();
-
-
-        for (Job job : jobs) {
-
-            if (job.getJobId() == jobId) {
-
-                return job;
-            }
-        }
-
-
-        JOptionPane.showMessageDialog(
-                this,
-                "Job not found."
-        );
-
-
-        return null;
-    }
-
-
-    // =========================
+    // =========================================================
     // APPLY FOR JOB
-    // =========================
+    // =========================================================
 
-    private void applyForSelectedJob() {
-
-        Job selectedJob =
-                getSelectedJob();
-
+    private void applyForJob(Job selectedJob) {
 
         if (selectedJob == null) {
-
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Unable to select this job.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
             return;
         }
-
 
         int confirm =
                 JOptionPane.showConfirmDialog(
                         this,
-                        "Are you sure you want to apply for this job?",
+                        "Do you want to apply for:\n\n"
+                                + selectedJob.getTitle()
+                                + "?",
                         "Confirm Application",
                         JOptionPane.YES_NO_OPTION
                 );
 
-
-        if (
-                confirm !=
-                        JOptionPane.YES_OPTION
-        ) {
-
+        if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
-
 
         boolean success =
                 applicationDAO.applyForJob(
@@ -664,22 +645,195 @@ public class JobSeekerDashboard extends JFrame {
                         jobSeeker.getUserId()
                 );
 
-
         if (success) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Application submitted successfully!"
+                    "Application submitted successfully!",
+                    "Application Submitted",
+                    JOptionPane.INFORMATION_MESSAGE
             );
 
         } else {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "You may have already applied for this job.",
-                    "Application Failed",
+                    "You have already applied for this job.",
+                    "Already Applied",
                     JOptionPane.WARNING_MESSAGE
             );
         }
+    }
+
+    // =========================================================
+    // UI HELPERS
+    // =========================================================
+
+    private JButton createHeaderButton(String text) {
+
+        JButton button = new JButton(text);
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        12
+                )
+        );
+
+        button.setForeground(Color.WHITE);
+        button.setBackground(
+                new Color(51, 65, 85)
+        );
+
+        button.setFocusPainted(false);
+        button.setBorder(
+                BorderFactory.createEmptyBorder(
+                        8, 10, 8, 10
+                )
+        );
+
+        button.setCursor(
+                new Cursor(Cursor.HAND_CURSOR)
+        );
+
+        return button;
+    }
+
+    private JLabel createSearchLabel(String text) {
+
+        JLabel label = new JLabel(text);
+
+        label.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        label.setForeground(TEXT);
+
+        return label;
+    }
+
+    private void stylePrimaryButton(JButton button) {
+
+        button.setBackground(PRIMARY);
+        button.setForeground(Color.WHITE);
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setFocusPainted(false);
+        button.setBorder(
+                BorderFactory.createEmptyBorder(
+                        8, 14, 8, 14
+                )
+        );
+
+        button.setCursor(
+                new Cursor(Cursor.HAND_CURSOR)
+        );
+    }
+
+    private void styleSecondaryButton(JButton button) {
+
+        button.setBackground(Color.WHITE);
+        button.setForeground(TEXT);
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                7, 13, 7, 13
+                        )
+                )
+        );
+
+        button.setCursor(
+                new Cursor(Cursor.HAND_CURSOR)
+        );
+    }
+
+    private String safe(String value) {
+
+        if (value == null || value.trim().isEmpty()) {
+            return "Not specified";
+        }
+
+        return value.trim();
+    }
+
+    private String formatJobType(String jobType) {
+
+        if (jobType == null ||
+                jobType.trim().isEmpty()) {
+            return "Not specified";
+        }
+
+        return jobType
+                .replace("_", " ")
+                .toLowerCase()
+                .replace(
+                        "full time",
+                        "Full Time"
+                )
+                .replace(
+                        "part time",
+                        "Part Time"
+                );
+    }
+
+    private String shorten(
+            String text,
+            int maxLength
+    ) {
+
+        if (text == null) {
+            return "Not specified";
+        }
+
+        text = text.replace(
+                "\n",
+                " "
+        ).trim();
+
+        if (text.length() <= maxLength) {
+            return text;
+        }
+
+        return text.substring(
+                0,
+                maxLength
+        ) + "...";
+    }
+
+    private String escapeHtml(String text) {
+
+        if (text == null) {
+            return "";
+        }
+
+        return text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 }
