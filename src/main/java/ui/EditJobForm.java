@@ -5,6 +5,7 @@ import model.Job;
 import model.User;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class EditJobForm extends JFrame {
@@ -20,6 +21,13 @@ public class EditJobForm extends JFrame {
     private JTextField salaryField;
     private JComboBox<String> jobTypeComboBox;
 
+    private final Color PRIMARY = new Color(37, 99, 235);
+    private final Color PRIMARY_DARK = new Color(29, 78, 216);
+    private final Color DARK = new Color(30, 41, 59);
+    private final Color MUTED = new Color(100, 116, 139);
+    private final Color BACKGROUND = new Color(241, 245, 249);
+    private final Color BORDER = new Color(203, 213, 225);
+
     public EditJobForm(User employer, Job job) {
 
         this.employer = employer;
@@ -27,7 +35,11 @@ public class EditJobForm extends JFrame {
 
         setTitle("WorkBridge - Edit Job");
 
-        setSize(600, 650);
+        setSize(900, 750);
+
+        setMinimumSize(
+                new Dimension(750, 650)
+        );
 
         setDefaultCloseOperation(
                 JFrame.DISPOSE_ON_CLOSE
@@ -42,9 +54,46 @@ public class EditJobForm extends JFrame {
 
     private void createUI() {
 
-        JPanel panel = new JPanel();
+        JPanel background =
+                new JPanel(new GridBagLayout());
 
-        panel.setLayout(null);
+        background.setBackground(BACKGROUND);
+
+        JPanel card =
+                new JPanel(new BorderLayout());
+
+        card.setPreferredSize(
+                new Dimension(700, 650)
+        );
+
+        card.setBackground(Color.WHITE);
+
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(226, 232, 240)
+                        ),
+                        new EmptyBorder(
+                                28, 35, 28, 35
+                        )
+                )
+        );
+
+        // =========================
+        // HEADER
+        // =========================
+
+        JPanel header =
+                new JPanel();
+
+        header.setLayout(
+                new BoxLayout(
+                        header,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        header.setBackground(Color.WHITE);
 
         JLabel titleLabel =
                 new JLabel("Edit Job");
@@ -53,48 +102,101 @@ public class EditJobForm extends JFrame {
                 new Font(
                         "Arial",
                         Font.BOLD,
-                        24
+                        28
                 )
         );
 
-        titleLabel.setBounds(
-                240, 20, 150, 35
+        titleLabel.setForeground(DARK);
+
+        titleLabel.setAlignmentX(
+                Component.CENTER_ALIGNMENT
         );
 
-        panel.add(titleLabel);
+        JLabel subtitleLabel =
+                new JLabel(
+                        "Update the details of your job posting"
+                );
 
+        subtitleLabel.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        subtitleLabel.setForeground(MUTED);
+
+        subtitleLabel.setAlignmentX(
+                Component.CENTER_ALIGNMENT
+        );
+
+        header.add(titleLabel);
+
+        header.add(
+                Box.createVerticalStrut(5)
+        );
+
+        header.add(subtitleLabel);
+
+        header.add(
+                Box.createVerticalStrut(25)
+        );
+
+        card.add(
+                header,
+                BorderLayout.NORTH
+        );
+
+        // =========================
+        // FORM
+        // =========================
+
+        JPanel form =
+                new JPanel(new GridBagLayout());
+
+        form.setBackground(Color.WHITE);
+
+        GridBagConstraints gbc =
+                new GridBagConstraints();
+
+        gbc.insets =
+                new Insets(7, 0, 7, 0);
+
+        gbc.fill =
+                GridBagConstraints.HORIZONTAL;
+
+        gbc.weightx = 1.0;
 
         // JOB TITLE
 
-        JLabel jobTitleLabel =
-                new JLabel("Job Title:");
-
-        jobTitleLabel.setBounds(
-                50, 80, 120, 25
+        addLabel(
+                form,
+                gbc,
+                "Job Title",
+                0
         );
-
-        panel.add(jobTitleLabel);
 
         titleField =
                 new JTextField();
 
-        titleField.setBounds(
-                180, 80, 350, 25
+        styleField(titleField);
+
+        addComponent(
+                form,
+                gbc,
+                titleField,
+                1
         );
-
-        panel.add(titleField);
-
 
         // CATEGORY
 
-        JLabel categoryLabel =
-                new JLabel("Category:");
-
-        categoryLabel.setBounds(
-                50, 120, 120, 25
+        addLabel(
+                form,
+                gbc,
+                "Category",
+                2
         );
-
-        panel.add(categoryLabel);
 
         categoryComboBox =
                 new JComboBox<>(
@@ -107,123 +209,135 @@ public class EditJobForm extends JFrame {
                                 "Data Entry",
                                 "Marketing",
                                 "Writing",
+                                "Plumbing",
+                                "Electrician",
+                                "Video Editor",
+                                "System Administrator",
+                                "Waiter",
+                                "Hotel Manager",
+                                "House Cleaner",
+                                "Receptionist",
                                 "Other"
                         }
                 );
 
-        categoryComboBox.setBounds(
-                180, 120, 350, 25
+        styleComboBox(
+                categoryComboBox
         );
 
-        panel.add(categoryComboBox);
-
+        addComponent(
+                form,
+                gbc,
+                categoryComboBox,
+                3
+        );
 
         // DESCRIPTION
 
-        JLabel descriptionLabel =
-                new JLabel("Description:");
-
-        descriptionLabel.setBounds(
-                50, 160, 120, 25
+        addLabel(
+                form,
+                gbc,
+                "Job Description",
+                4
         );
-
-        panel.add(descriptionLabel);
 
         descriptionArea =
-                new JTextArea();
+                new JTextArea(4, 20);
 
-        descriptionArea.setLineWrap(true);
-        descriptionArea.setWrapStyleWord(true);
-
-        JScrollPane descriptionScroll =
-                new JScrollPane(descriptionArea);
-
-        descriptionScroll.setBounds(
-                180, 160, 350, 80
+        styleTextArea(
+                descriptionArea
         );
 
-        panel.add(descriptionScroll);
+        JScrollPane descriptionScroll =
+                createScrollPane(
+                        descriptionArea
+                );
 
+        addComponent(
+                form,
+                gbc,
+                descriptionScroll,
+                5
+        );
 
         // REQUIREMENTS
 
-        JLabel requirementsLabel =
-                new JLabel("Requirements:");
-
-        requirementsLabel.setBounds(
-                50, 260, 120, 25
+        addLabel(
+                form,
+                gbc,
+                "Requirements",
+                6
         );
-
-        panel.add(requirementsLabel);
 
         requirementsArea =
-                new JTextArea();
+                new JTextArea(4, 20);
 
-        requirementsArea.setLineWrap(true);
-        requirementsArea.setWrapStyleWord(true);
-
-        JScrollPane requirementsScroll =
-                new JScrollPane(requirementsArea);
-
-        requirementsScroll.setBounds(
-                180, 260, 350, 100
+        styleTextArea(
+                requirementsArea
         );
 
-        panel.add(requirementsScroll);
+        JScrollPane requirementsScroll =
+                createScrollPane(
+                        requirementsArea
+                );
 
+        addComponent(
+                form,
+                gbc,
+                requirementsScroll,
+                7
+        );
 
         // LOCATION
 
-        JLabel locationLabel =
-                new JLabel("Location:");
-
-        locationLabel.setBounds(
-                50, 380, 120, 25
+        addLabel(
+                form,
+                gbc,
+                "Location",
+                8
         );
-
-        panel.add(locationLabel);
 
         locationField =
                 new JTextField();
 
-        locationField.setBounds(
-                180, 380, 350, 25
+        styleField(locationField);
+
+        addComponent(
+                form,
+                gbc,
+                locationField,
+                9
         );
-
-        panel.add(locationField);
-
 
         // SALARY
 
-        JLabel salaryLabel =
-                new JLabel("Salary:");
-
-        salaryLabel.setBounds(
-                50, 420, 120, 25
+        addLabel(
+                form,
+                gbc,
+                "Salary",
+                10
         );
-
-        panel.add(salaryLabel);
 
         salaryField =
                 new JTextField();
 
-        salaryField.setBounds(
-                180, 420, 350, 25
+        styleField(salaryField);
+
+        addComponent(
+                form,
+                gbc,
+                salaryField,
+                11
         );
-
-        panel.add(salaryField);
-
 
         // JOB TYPE
 
-        JLabel jobTypeLabel =
-                new JLabel("Job Type:");
-
-        jobTypeLabel.setBounds(
-                50, 460, 120, 25
+        addLabel(
+                form,
+                gbc,
+                "Job Type",
+                12
         );
-
-        panel.add(jobTypeLabel);
 
         jobTypeComboBox =
                 new JComboBox<>(
@@ -233,33 +347,334 @@ public class EditJobForm extends JFrame {
                         }
                 );
 
-        jobTypeComboBox.setBounds(
-                180, 460, 350, 25
+        styleComboBox(
+                jobTypeComboBox
         );
 
-        panel.add(jobTypeComboBox);
+        addComponent(
+                form,
+                gbc,
+                jobTypeComboBox,
+                13
+        );
 
+        JScrollPane formScroll =
+                new JScrollPane(form);
 
-        // UPDATE BUTTON
+        formScroll.setBorder(
+                BorderFactory.createEmptyBorder()
+        );
+
+        formScroll.setBackground(Color.WHITE);
+
+        formScroll.getVerticalScrollBar()
+                .setUnitIncrement(16);
+
+        card.add(
+                formScroll,
+                BorderLayout.CENTER
+        );
+
+        // =========================
+        // BUTTONS
+        // =========================
+
+        JPanel buttonPanel =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.CENTER,
+                                12,
+                                15
+                        )
+                );
+
+        buttonPanel.setBackground(Color.WHITE);
+
+        JButton cancelButton =
+                createSecondaryButton(
+                        "Cancel"
+                );
 
         JButton updateButton =
-                new JButton("Update Job");
+                createPrimaryButton(
+                        "Update Job"
+                );
 
-        updateButton.setBounds(
-                220, 520, 140, 40
+        buttonPanel.add(cancelButton);
+
+        buttonPanel.add(updateButton);
+
+        cancelButton.addActionListener(
+                e -> dispose()
         );
-
-        panel.add(updateButton);
-
 
         updateButton.addActionListener(
                 e -> updateJob()
         );
 
+        card.add(
+                buttonPanel,
+                BorderLayout.SOUTH
+        );
 
-        add(panel);
+        background.add(card);
+
+        add(background);
+
+        getRootPane().setDefaultButton(
+                updateButton
+        );
     }
 
+    // =========================
+    // FORM HELPERS
+    // =========================
+
+    private void addLabel(
+            JPanel panel,
+            GridBagConstraints gbc,
+            String text,
+            int row
+    ) {
+
+        gbc.gridx = 0;
+        gbc.gridy = row;
+
+        gbc.gridwidth = 1;
+
+        gbc.weighty = 0;
+
+        JLabel label =
+                new JLabel(text);
+
+        label.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        label.setForeground(DARK);
+
+        panel.add(
+                label,
+                gbc
+        );
+    }
+
+    private void addComponent(
+            JPanel panel,
+            GridBagConstraints gbc,
+            Component component,
+            int row
+    ) {
+
+        gbc.gridx = 0;
+        gbc.gridy = row;
+
+        gbc.gridwidth = 1;
+
+        gbc.weighty = 0;
+
+        panel.add(
+                component,
+                gbc
+        );
+    }
+
+    private void styleField(
+            JTextField field
+    ) {
+
+        field.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        field.setPreferredSize(
+                new Dimension(
+                        500,
+                        40
+                )
+        );
+
+        field.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER
+                        ),
+                        new EmptyBorder(
+                                7, 12, 7, 12
+                        )
+                )
+        );
+
+        field.setBackground(Color.WHITE);
+    }
+
+    private void styleComboBox(
+            JComboBox<String> comboBox
+    ) {
+
+        comboBox.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        comboBox.setPreferredSize(
+                new Dimension(
+                        500,
+                        40
+                )
+        );
+
+        comboBox.setBackground(Color.WHITE);
+
+        comboBox.setBorder(
+                BorderFactory.createLineBorder(
+                        BORDER
+                )
+        );
+    }
+
+    private void styleTextArea(
+            JTextArea area
+    ) {
+
+        area.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        area.setLineWrap(true);
+
+        area.setWrapStyleWord(true);
+
+        area.setRows(4);
+
+        area.setBorder(
+                new EmptyBorder(
+                        9, 12, 9, 12
+                )
+        );
+
+        area.setBackground(Color.WHITE);
+    }
+
+    private JScrollPane createScrollPane(
+            JTextArea area
+    ) {
+
+        JScrollPane scroll =
+                new JScrollPane(area);
+
+        scroll.setPreferredSize(
+                new Dimension(
+                        500,
+                        100
+                )
+        );
+
+        scroll.setBorder(
+                BorderFactory.createLineBorder(
+                        BORDER
+                )
+        );
+
+        return scroll;
+    }
+
+    private JButton createPrimaryButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        button.setForeground(Color.WHITE);
+
+        button.setBackground(PRIMARY);
+
+        button.setPreferredSize(
+                new Dimension(
+                        140,
+                        42
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorderPainted(false);
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    private JButton createSecondaryButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        button.setForeground(DARK);
+
+        button.setBackground(
+                new Color(248, 250, 252)
+        );
+
+        button.setPreferredSize(
+                new Dimension(
+                        110,
+                        42
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    // =========================
+    // LOAD JOB
+    // =========================
 
     private void loadJobData() {
 
@@ -292,6 +707,9 @@ public class EditJobForm extends JFrame {
         );
     }
 
+    // =========================
+    // UPDATE JOB
+    // =========================
 
     private void updateJob() {
 
@@ -303,36 +721,42 @@ public class EditJobForm extends JFrame {
                         .getSelectedItem();
 
         String description =
-                descriptionArea.getText().trim();
+                descriptionArea
+                        .getText()
+                        .trim();
 
         String requirements =
-                requirementsArea.getText().trim();
+                requirementsArea
+                        .getText()
+                        .trim();
 
         String location =
-                locationField.getText().trim();
+                locationField
+                        .getText()
+                        .trim();
 
         String salary =
-                salaryField.getText().trim();
+                salaryField
+                        .getText()
+                        .trim();
 
         String jobType =
                 (String) jobTypeComboBox
                         .getSelectedItem();
 
-
-        if (
-                title.isEmpty() ||
-                        description.isEmpty() ||
-                        requirements.isEmpty()
-        ) {
+        if (title.isEmpty() ||
+                description.isEmpty() ||
+                requirements.isEmpty()) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Please fill all required fields."
+                    "Please fill in the Job Title, Description and Requirements.",
+                    "Missing Information",
+                    JOptionPane.WARNING_MESSAGE
             );
 
             return;
         }
-
 
         job.setTitle(title);
 
@@ -348,19 +772,19 @@ public class EditJobForm extends JFrame {
 
         job.setJobType(jobType);
 
-
         JobDAO jobDAO =
                 new JobDAO();
 
         boolean success =
                 jobDAO.updateJob(job);
 
-
         if (success) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Job updated successfully!"
+                    "Job updated successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
             );
 
             dispose();
@@ -370,9 +794,10 @@ public class EditJobForm extends JFrame {
             JOptionPane.showMessageDialog(
                     this,
                     "Failed to update job.",
-                    "Error",
+                    "Update Error",
                     JOptionPane.ERROR_MESSAGE
             );
         }
     }
 }
+

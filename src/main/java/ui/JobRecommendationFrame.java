@@ -1,534 +1,1865 @@
 package ui;
 
 import ai.JobMatchResult;
-import ai.JobRecommendationEngine;
+import ai.JobMatchingEngine;
 import dao.ApplicationDAO;
-import dao.JobDAO;
-import dao.ProfileDAO;
-import model.Application;
 import model.Job;
 import model.User;
-import model.WorkerProfile;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
 public class JobRecommendationFrame extends JFrame {
 
     private User jobSeeker;
+    private JPanel jobsPanel;
 
-    private ProfileDAO profileDAO;
-    private JobDAO jobDAO;
-    private ApplicationDAO applicationDAO;
-
-    private JTable recommendationTable;
-    private DefaultTableModel tableModel;
-
-    private List<JobMatchResult> recommendations;
-
+    private final Color BACKGROUND = new Color(245, 247, 250);
+    private final Color HEADER = new Color(25, 35, 50);
+    private final Color TEXT = new Color(31, 41, 55);
+    private final Color SECONDARY_TEXT = new Color(107, 114, 128);
+    private final Color PRIMARY = new Color(37, 99, 235);
+    private final Color BORDER = new Color(229, 231, 235);
+    private final Color SUCCESS = new Color(22, 101, 52);
 
     public JobRecommendationFrame(User jobSeeker) {
 
         this.jobSeeker = jobSeeker;
 
-        profileDAO = new ProfileDAO();
-        jobDAO = new JobDAO();
-        applicationDAO = new ApplicationDAO();
-
         setTitle("WorkBridge - AI Job Recommendations");
-        setSize(1000, 550);
-
-        setDefaultCloseOperation(
-                JFrame.DISPOSE_ON_CLOSE
-        );
-
+        setSize(1000, 700);
+        setMinimumSize(new Dimension(900, 600));
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         createUI();
-
         loadRecommendations();
     }
 
-
-    // =========================
-    // CREATE UI
-    // =========================
+    // =========================================================
+    // UI
+    // =========================================================
 
     private void createUI() {
 
+        getContentPane().setBackground(BACKGROUND);
         setLayout(new BorderLayout());
 
+        // =====================================================
+        // HEADER
+        // =====================================================
 
-        // =========================
-        // TOP PANEL
-        // =========================
-
-        JPanel topPanel =
-                new JPanel(
-                        new BorderLayout()
-                );
-
-        JLabel titleLabel =
-                new JLabel(
-                        "AI Job Recommendations"
-                );
-
-        titleLabel.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        22
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(HEADER);
+        headerPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        18, 25, 18, 25
                 )
         );
 
-        topPanel.add(
-                titleLabel,
+        JPanel brandPanel = new JPanel();
+        brandPanel.setLayout(
+                new BoxLayout(
+                        brandPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+        brandPanel.setOpaque(false);
+
+        JLabel titleLabel = new JLabel(
+                "AI Job Recommendations"
+        );
+
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        24
+                )
+        );
+
+        JLabel subtitleLabel = new JLabel(
+                "Jobs matched to your skills and profile"
+        );
+
+        subtitleLabel.setForeground(
+                new Color(203, 213, 225)
+        );
+
+        subtitleLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        brandPanel.add(titleLabel);
+        brandPanel.add(
+                Box.createVerticalStrut(3)
+        );
+        brandPanel.add(subtitleLabel);
+
+        JPanel rightPanel = new JPanel(
+                new FlowLayout(
+                        FlowLayout.RIGHT,
+                        0,
+                        5
+                )
+        );
+
+        rightPanel.setOpaque(false);
+
+        JButton closeButton =
+                createHeaderButton("Close");
+
+        closeButton.addActionListener(
+                e -> dispose()
+        );
+
+        rightPanel.add(closeButton);
+
+        headerPanel.add(
+                brandPanel,
                 BorderLayout.WEST
         );
 
-
-        JLabel infoLabel =
-                new JLabel(
-                        "Jobs are ranked according to your skills"
-                );
-
-        topPanel.add(
-                infoLabel,
+        headerPanel.add(
+                rightPanel,
                 BorderLayout.EAST
         );
 
         add(
-                topPanel,
+                headerPanel,
+                BorderLayout.NORTH
+        );
+
+        // =====================================================
+        // MAIN
+        // =====================================================
+
+        JPanel mainPanel =
+                new JPanel(
+                        new BorderLayout(0, 12)
+                );
+
+        mainPanel.setBackground(BACKGROUND);
+
+        mainPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        15, 20, 15, 20
+                )
+        );
+
+        // =====================================================
+        // SECTION HEADER
+        // =====================================================
+
+        JPanel sectionHeader =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        sectionHeader.setOpaque(false);
+
+        JPanel sectionText =
+                new JPanel();
+
+        sectionText.setLayout(
+                new BoxLayout(
+                        sectionText,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        sectionText.setOpaque(false);
+
+        JLabel heading =
+                new JLabel(
+                        "Recommended Jobs"
+                );
+
+        heading.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        21
+                )
+        );
+
+        heading.setForeground(TEXT);
+
+        JLabel description =
+                new JLabel(
+                        "Based on your skills, experience and profile."
+                );
+
+        description.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        description.setForeground(
+                SECONDARY_TEXT
+        );
+
+        sectionText.add(heading);
+
+        sectionText.add(
+                Box.createVerticalStrut(3)
+        );
+
+        sectionText.add(description);
+
+        sectionHeader.add(
+                sectionText,
+                BorderLayout.WEST
+        );
+
+        mainPanel.add(
+                sectionHeader,
+                BorderLayout.NORTH
+        );
+
+        // =====================================================
+        // JOBS PANEL
+        // =====================================================
+
+        jobsPanel = new JPanel();
+
+        jobsPanel.setLayout(
+                new BoxLayout(
+                        jobsPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        jobsPanel.setBackground(BACKGROUND);
+
+        jobsPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        5, 2, 20, 2
+                )
+        );
+
+        JScrollPane scrollPane =
+                new JScrollPane(jobsPanel);
+
+        scrollPane.setBorder(
+                BorderFactory.createEmptyBorder()
+        );
+
+        scrollPane.setBackground(BACKGROUND);
+
+        scrollPane.getViewport().setBackground(
+                BACKGROUND
+        );
+
+        scrollPane.setHorizontalScrollBarPolicy(
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        );
+
+        scrollPane.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+        );
+
+        scrollPane.getVerticalScrollBar()
+                .setUnitIncrement(16);
+
+        mainPanel.add(
+                scrollPane,
+                BorderLayout.CENTER
+        );
+
+        add(
+                mainPanel,
+                BorderLayout.CENTER
+        );
+    }
+
+    // =========================================================
+    // LOAD RECOMMENDATIONS
+    // =========================================================
+
+    private void loadRecommendations() {
+
+        jobsPanel.removeAll();
+
+        try {
+
+            JobMatchingEngine engine =
+                    new JobMatchingEngine();
+
+            List<JobMatchResult> recommendations =
+                    engine.getRecommendations(jobSeeker);
+
+            if (recommendations == null ||
+                    recommendations.isEmpty()) {
+
+                showEmptyMessage();
+
+            } else {
+
+                for (JobMatchResult result :
+                        recommendations) {
+
+                    JPanel card =
+                            createJobCard(result);
+
+                    jobsPanel.add(card);
+
+                    jobsPanel.add(
+                            Box.createVerticalStrut(12)
+                    );
+                }
+            }
+
+        } catch (Exception e) {
+
+            showEmptyMessage();
+
+            e.printStackTrace();
+        }
+
+        jobsPanel.revalidate();
+        jobsPanel.repaint();
+    }
+
+    // =========================================================
+    // JOB CARD
+    // =========================================================
+
+    private JPanel createJobCard(
+            JobMatchResult result
+    ) {
+
+        Job job = result.getJob();
+
+        JPanel card =
+                new JPanel(
+                        new BorderLayout(
+                                15,
+                                10
+                        )
+                );
+
+        card.setBackground(Color.WHITE);
+
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER,
+                                1
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                17,
+                                20,
+                                17,
+                                20
+                        )
+                )
+        );
+
+        card.setAlignmentX(
+                Component.LEFT_ALIGNMENT
+        );
+
+        card.setMaximumSize(
+                new Dimension(
+                        Integer.MAX_VALUE,
+                        220
+                )
+        );
+
+        // =====================================================
+        // INFORMATION
+        // =====================================================
+
+        JPanel informationPanel =
+                new JPanel();
+
+        informationPanel.setOpaque(false);
+
+        informationPanel.setLayout(
+                new BoxLayout(
+                        informationPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        JLabel titleLabel =
+                new JLabel(
+                        safe(job.getTitle())
+                );
+
+        titleLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        19
+                )
+        );
+
+        titleLabel.setForeground(TEXT);
+
+        JLabel categoryLabel =
+                new JLabel(
+                        safe(job.getCategory())
+                );
+
+        categoryLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        12
+                )
+        );
+
+        categoryLabel.setForeground(PRIMARY);
+
+        JLabel locationLabel =
+                new JLabel(
+                        "Location: "
+                                + safe(job.getLocation())
+                );
+
+        locationLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        locationLabel.setForeground(
+                SECONDARY_TEXT
+        );
+
+        JLabel typeLabel =
+                new JLabel(
+                        "Job Type: "
+                                + formatJobType(
+                                job.getJobType()
+                        )
+                );
+
+        typeLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        typeLabel.setForeground(
+                SECONDARY_TEXT
+        );
+
+        JLabel salaryLabel =
+                new JLabel(
+                        "Salary: "
+                                + safe(job.getSalary())
+                );
+
+        salaryLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        salaryLabel.setForeground(SUCCESS);
+
+        String requirements =
+                shorten(
+                        safe(job.getRequirements()),
+                        180
+                );
+
+        JLabel requirementsLabel =
+                new JLabel(
+                        "<html><b>Requirements:</b> "
+                                + escapeHtml(requirements)
+                                + "</html>"
+                );
+
+        requirementsLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        requirementsLabel.setForeground(TEXT);
+
+        informationPanel.add(titleLabel);
+
+        informationPanel.add(
+                Box.createVerticalStrut(5)
+        );
+
+        informationPanel.add(categoryLabel);
+
+        informationPanel.add(
+                Box.createVerticalStrut(7)
+        );
+
+        informationPanel.add(locationLabel);
+
+        informationPanel.add(
+                Box.createVerticalStrut(3)
+        );
+
+        informationPanel.add(typeLabel);
+
+        informationPanel.add(
+                Box.createVerticalStrut(3)
+        );
+
+        informationPanel.add(salaryLabel);
+
+        informationPanel.add(
+                Box.createVerticalStrut(8)
+        );
+
+        informationPanel.add(requirementsLabel);
+
+        // =====================================================
+        // MATCH SCORE
+        // =====================================================
+
+        JPanel matchPanel =
+                new JPanel();
+
+        matchPanel.setLayout(
+                new BoxLayout(
+                        matchPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        matchPanel.setOpaque(false);
+
+        JLabel matchTitle =
+                new JLabel("AI MATCH");
+
+        matchTitle.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        10
+                )
+        );
+
+        matchTitle.setForeground(
+                SECONDARY_TEXT
+        );
+
+        JLabel matchScore =
+                new JLabel(
+                        formatPercentage(
+                                result.getMatchPercentage()
+                        )
+                );
+
+        matchScore.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        23
+                )
+        );
+
+        matchScore.setForeground(PRIMARY);
+
+        matchPanel.add(matchTitle);
+
+        matchPanel.add(
+                Box.createVerticalStrut(2)
+        );
+
+        matchPanel.add(matchScore);
+
+        // =====================================================
+        // ACTIONS
+        // =====================================================
+
+        JPanel actionPanel =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        actionPanel.setOpaque(false);
+
+        actionPanel.add(
+                matchPanel,
+                BorderLayout.WEST
+        );
+
+        JPanel buttons =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.RIGHT,
+                                8,
+                                0
+                        )
+                );
+
+        buttons.setOpaque(false);
+
+        JButton detailsButton =
+                new JButton("View Details");
+
+        JButton whyButton =
+                new JButton("Why This Matches");
+
+        JButton applyButton =
+                new JButton("Apply Now");
+
+        detailsButton.setPreferredSize(
+                new Dimension(120, 38)
+        );
+
+        whyButton.setPreferredSize(
+                new Dimension(145, 38)
+        );
+
+        applyButton.setPreferredSize(
+                new Dimension(110, 38)
+        );
+
+        styleSecondaryButton(detailsButton);
+        styleSecondaryButton(whyButton);
+        stylePrimaryButton(applyButton);
+
+        detailsButton.addActionListener(
+                e -> showJobDetails(result)
+        );
+
+        whyButton.addActionListener(
+                e -> showMatchDetails(result)
+        );
+
+        applyButton.addActionListener(
+                e -> applyForJob(result)
+        );
+
+        buttons.add(detailsButton);
+        buttons.add(whyButton);
+        buttons.add(applyButton);
+
+        actionPanel.add(
+                buttons,
+                BorderLayout.EAST
+        );
+
+        card.add(
+                informationPanel,
+                BorderLayout.CENTER
+        );
+
+        card.add(
+                actionPanel,
+                BorderLayout.SOUTH
+        );
+
+        return card;
+    }
+
+    // =========================================================
+    // JOB DETAILS
+    // =========================================================
+    private void showJobDetails(
+            JobMatchResult result
+    ) {
+
+        Job job = result.getJob();
+
+        JDialog dialog =
+                new JDialog(
+                        this,
+                        "Job Details",
+                        true
+                );
+
+        dialog.setSize(
+                760,
+                560
+        );
+
+        dialog.setResizable(false);
+
+        dialog.setLocationRelativeTo(this);
+
+
+        // =====================================================
+        // MAIN PANEL
+        // =====================================================
+
+        JPanel mainPanel =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        mainPanel.setBackground(BACKGROUND);
+
+        mainPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        20,
+                        24,
+                        16,
+                        24
+                )
+        );
+
+
+        // =====================================================
+        // HEADER
+        // =====================================================
+
+        JPanel titlePanel =
+                new JPanel();
+
+        titlePanel.setLayout(
+                new BoxLayout(
+                        titlePanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        titlePanel.setOpaque(false);
+
+
+        JLabel titleLabel =
+                new JLabel(
+                        safe(job.getTitle())
+                );
+
+        titleLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        23
+                )
+        );
+
+        titleLabel.setForeground(TEXT);
+
+
+        JLabel categoryLabel =
+                new JLabel(
+                        safe(job.getCategory())
+                                + "  •  "
+                                + formatJobType(
+                                job.getJobType()
+                        )
+                );
+
+        categoryLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        categoryLabel.setForeground(PRIMARY);
+
+
+        titlePanel.add(titleLabel);
+
+        titlePanel.add(
+                Box.createVerticalStrut(4)
+        );
+
+        titlePanel.add(categoryLabel);
+
+
+        mainPanel.add(
+                titlePanel,
                 BorderLayout.NORTH
         );
 
 
-        // =========================
-        // TABLE
-        // =========================
+        // =====================================================
+        // CONTENT
+        // =====================================================
 
-        String[] columns = {
-                "Job ID",
-                "Job Title",
-                "Category",
-                "Location",
-                "Job Type",
-                "Match %"
-        };
+        JPanel contentPanel =
+                new JPanel(
+                        new BorderLayout()
+                );
 
+        contentPanel.setOpaque(false);
 
-        tableModel =
-                new DefaultTableModel(
-                        columns,
+        contentPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        18,
+                        0,
+                        10,
                         0
-                ) {
-
-                    @Override
-                    public boolean isCellEditable(
-                            int row,
-                            int column
-                    ) {
-                        return false;
-                    }
-                };
-
-
-        recommendationTable =
-                new JTable(tableModel);
-
-        recommendationTable.setSelectionMode(
-                ListSelectionModel.SINGLE_SELECTION
+                )
         );
 
 
-        add(
-                new JScrollPane(
-                        recommendationTable
-                ),
+        // =====================================================
+        // INFO BOXES
+        // =====================================================
+
+        JPanel infoPanel =
+                new JPanel(
+                        new GridLayout(
+                                1,
+                                3,
+                                14,
+                                0
+                        )
+                );
+
+        infoPanel.setOpaque(false);
+
+
+        infoPanel.add(
+                createDetailBox(
+                        "LOCATION",
+                        safe(job.getLocation())
+                )
+        );
+
+
+        infoPanel.add(
+                createDetailBox(
+                        "SALARY",
+                        safe(job.getSalary())
+                )
+        );
+
+
+        infoPanel.add(
+                createDetailBox(
+                        "JOB TYPE",
+                        formatJobType(
+                                job.getJobType()
+                        )
+                )
+        );
+
+
+        // =====================================================
+        // DESCRIPTION + REQUIREMENTS
+        // =====================================================
+
+        JPanel textPanel =
+                new JPanel();
+
+        textPanel.setLayout(
+                new BoxLayout(
+                        textPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        textPanel.setOpaque(false);
+
+        textPanel.setBorder(
+                BorderFactory.createEmptyBorder(
+                        18,
+                        0,
+                        0,
+                        0
+                )
+        );
+
+
+        // =====================================================
+        // JOB DESCRIPTION
+        // =====================================================
+
+        JLabel descriptionTitle =
+                new JLabel(
+                        "Job Description"
+                );
+
+        descriptionTitle.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        15
+                )
+        );
+
+        descriptionTitle.setForeground(TEXT);
+
+        descriptionTitle.setAlignmentX(
+                Component.LEFT_ALIGNMENT
+        );
+
+
+        textPanel.add(
+                descriptionTitle
+        );
+
+        textPanel.add(
+                Box.createVerticalStrut(6)
+        );
+
+
+        JLabel descriptionLabel =
+                new JLabel(
+                        "<html>"
+                                + "<div style='width:700px;'>"
+                                + escapeHtml(
+                                safe(
+                                        job.getDescription()
+                                )
+                        )
+                                + "</div>"
+                                + "</html>"
+                );
+
+        descriptionLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        descriptionLabel.setForeground(
+                SECONDARY_TEXT
+        );
+
+        descriptionLabel.setAlignmentX(
+                Component.LEFT_ALIGNMENT
+        );
+
+
+        textPanel.add(
+                descriptionLabel
+        );
+
+
+        textPanel.add(
+                Box.createVerticalStrut(16)
+        );
+
+
+        // =====================================================
+        // REQUIREMENTS
+        // =====================================================
+
+        JLabel requirementsTitle =
+                new JLabel(
+                        "Requirements"
+                );
+
+        requirementsTitle.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        15
+                )
+        );
+
+        requirementsTitle.setForeground(TEXT);
+
+        requirementsTitle.setAlignmentX(
+                Component.LEFT_ALIGNMENT
+        );
+
+
+        textPanel.add(
+                requirementsTitle
+        );
+
+        textPanel.add(
+                Box.createVerticalStrut(6)
+        );
+
+
+        JLabel requirementsLabel =
+                new JLabel(
+                        "<html>"
+                                + "<div style='width:700px;'>"
+                                + escapeHtml(
+                                safe(
+                                        job.getRequirements()
+                                )
+                        )
+                                + "</div>"
+                                + "</html>"
+                );
+
+        requirementsLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        requirementsLabel.setForeground(
+                SECONDARY_TEXT
+        );
+
+        requirementsLabel.setAlignmentX(
+                Component.LEFT_ALIGNMENT
+        );
+
+
+        textPanel.add(
+                requirementsLabel
+        );
+
+
+        // =====================================================
+        // ADD CONTENT
+        // =====================================================
+
+        JPanel detailsPanel =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        detailsPanel.setOpaque(false);
+
+
+        detailsPanel.add(
+                infoPanel,
+                BorderLayout.NORTH
+        );
+
+
+        detailsPanel.add(
+                textPanel,
                 BorderLayout.CENTER
         );
 
 
-        // =========================
-        // BOTTOM PANEL
-        // =========================
-
-        JPanel bottomPanel =
-                new JPanel();
+        contentPanel.add(
+                detailsPanel,
+                BorderLayout.CENTER
+        );
 
 
-        JButton viewButton =
-                new JButton(
-                        "View Match Details"
+        mainPanel.add(
+                contentPanel,
+                BorderLayout.CENTER
+        );
+
+
+        // =====================================================
+        // BUTTONS
+        // =====================================================
+
+        JPanel buttonPanel =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.RIGHT,
+                                8,
+                                0
+                        )
                 );
 
-        JButton applyButton =
-                new JButton(
-                        "Apply for Job"
-                );
+        buttonPanel.setOpaque(false);
 
-        JButton refreshButton =
-                new JButton(
-                        "Refresh"
-                );
 
         JButton closeButton =
                 new JButton(
                         "Close"
                 );
 
+        JButton applyButton =
+                new JButton(
+                        "Apply Now"
+                );
 
-        bottomPanel.add(viewButton);
-        bottomPanel.add(applyButton);
-        bottomPanel.add(refreshButton);
-        bottomPanel.add(closeButton);
+
+        closeButton.setPreferredSize(
+                new Dimension(
+                        100,
+                        38
+                )
+        );
 
 
-        add(
-                bottomPanel,
+        applyButton.setPreferredSize(
+                new Dimension(
+                        120,
+                        38
+                )
+        );
+
+
+        styleSecondaryButton(
+                closeButton
+        );
+
+        stylePrimaryButton(
+                applyButton
+        );
+
+
+        closeButton.addActionListener(
+                e -> dialog.dispose()
+        );
+
+
+        applyButton.addActionListener(
+                e -> {
+
+                    dialog.dispose();
+
+                    applyForJob(result);
+                }
+        );
+
+
+        buttonPanel.add(
+                closeButton
+        );
+
+        buttonPanel.add(
+                applyButton
+        );
+
+
+        mainPanel.add(
+                buttonPanel,
                 BorderLayout.SOUTH
         );
 
 
-        // =========================
-        // BUTTON ACTIONS
-        // =========================
+        // =====================================================
+        // SHOW
+        // =====================================================
 
-        viewButton.addActionListener(
-                e -> viewMatchDetails()
-        );
+        dialog.add(mainPanel);
 
-        applyButton.addActionListener(
-                e -> applyForSelectedJob()
-        );
-
-        refreshButton.addActionListener(
-                e -> loadRecommendations()
-        );
-
-        closeButton.addActionListener(
-                e -> dispose()
-        );
+        dialog.setVisible(true);
     }
 
+    // =========================================================
+    // DETAIL BOX
+    // =========================================================
 
-    // =========================
-    // LOAD RECOMMENDATIONS
-    // =========================
+    private JPanel createDetailBox(
+            String title,
+            String value
+    ) {
 
-    private void loadRecommendations() {
+        JPanel panel =
+                new JPanel();
 
-        tableModel.setRowCount(0);
+        panel.setLayout(
+                new BoxLayout(
+                        panel,
+                        BoxLayout.Y_AXIS
+                )
+        );
 
+        panel.setBackground(Color.WHITE);
 
-        // Get job seeker's profile
-        WorkerProfile profile =
-                profileDAO.getProfile(
-                        jobSeeker.getUserId()
+        panel.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                9,
+                                11,
+                                9,
+                                11
+                        )
+                )
+        );
+
+        JLabel titleLabel =
+                new JLabel(title);
+
+        titleLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        10
+                )
+        );
+
+        titleLabel.setForeground(
+                SECONDARY_TEXT
+        );
+
+        JLabel valueLabel =
+                new JLabel(
+                        "<html>"
+                                + escapeHtml(
+                                shorten(value, 24)
+                        )
+                                + "</html>"
                 );
 
+        valueLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        12
+                )
+        );
 
-        // Check whether profile exists
-        if (profile == null) {
+        valueLabel.setForeground(TEXT);
 
-            JOptionPane.showMessageDialog(
-                    this,
+        panel.add(titleLabel);
 
-                    "Please create your profile first.",
+        panel.add(
+                Box.createVerticalStrut(4)
+        );
 
-                    "Profile Required",
+        panel.add(valueLabel);
 
-                    JOptionPane.WARNING_MESSAGE
-            );
-
-            return;
-        }
-
-
-        // Get skills
-        String seekerSkills =
-                profile.getSkills();
-
-
-        if (
-                seekerSkills == null ||
-                        seekerSkills.trim().isEmpty()
-        ) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-
-                    "Please add your skills to your profile first.",
-
-                    "Skills Required",
-
-                    JOptionPane.WARNING_MESSAGE
-            );
-
-            return;
-        }
-
-
-        // Get all jobs
-        List<Job> jobs =
-                jobDAO.getAllJobs();
-
-
-        if (jobs.isEmpty()) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-
-                    "No jobs are currently available."
-            );
-
-            return;
-        }
-
-
-        // Generate recommendations
-        recommendations =
-                JobRecommendationEngine.recommendJobs(
-                        seekerSkills,
-                        jobs
-                );
-
-
-        // Add results to table
-        for (
-                JobMatchResult result :
-                recommendations
-        ) {
-
-            Job job =
-                    result.getJob();
-
-
-            tableModel.addRow(
-                    new Object[]{
-                            job.getJobId(),
-                            job.getTitle(),
-                            job.getCategory(),
-                            job.getLocation(),
-                            job.getJobType(),
-                            result.getMatchPercentage()
-                                    + "%"
-                    }
-            );
-        }
+        return panel;
     }
 
+    // =========================================================
+    // WHY THIS MATCHES
+    // =========================================================
 
-    // =========================
-    // VIEW MATCH DETAILS
-    // =========================
-
-    private void viewMatchDetails() {
-
-        int selectedRow =
-                recommendationTable.getSelectedRow();
-
-
-        if (selectedRow == -1) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-
-                    "Please select a job first."
-            );
-
-            return;
-        }
-
-
-        JobMatchResult result =
-                recommendations.get(
-                        selectedRow
-                );
-
-
-        Job job =
-                result.getJob();
-
+    private void showMatchDetails(
+            JobMatchResult result
+    ) {
 
         String matchedSkills =
-                result.getMatchedSkills()
-                        .isEmpty()
-                        ? "None"
-                        : String.join(
-                        ", ",
+                setToText(
                         result.getMatchedSkills()
                 );
 
-
         String missingSkills =
-                result.getMissingSkills()
-                        .isEmpty()
-                        ? "None"
-                        : String.join(
-                        ", ",
+                setToText(
                         result.getMissingSkills()
                 );
 
-
-        String details =
-                "Job Title: "
-                        + job.getTitle()
-
-                        + "\nCategory: "
-                        + job.getCategory()
-
-                        + "\nLocation: "
-                        + job.getLocation()
-
-                        + "\nJob Type: "
-                        + job.getJobType()
-
-                        + "\n\nMatch Percentage: "
-                        + result.getMatchPercentage()
-                        + "%"
-
-                        + "\n\nMatched Skills:\n"
-                        + matchedSkills
-
-                        + "\n\nMissing Skills:\n"
-                        + missingSkills;
-
-
-        JTextArea textArea =
-                new JTextArea(details);
-
-        textArea.setEditable(false);
-
-        textArea.setLineWrap(true);
-
-        textArea.setWrapStyleWord(true);
-
-        textArea.setFont(
-                new Font(
-                        "Arial",
-                        Font.PLAIN,
-                        14
-                )
-        );
-
-
-        JScrollPane scrollPane =
-                new JScrollPane(textArea);
-
-        scrollPane.setPreferredSize(
-                new Dimension(
-                        500,
-                        350
-                )
-        );
-
-
-        JOptionPane.showMessageDialog(
-                this,
-
-                scrollPane,
-
-                "AI Match Details",
-
-                JOptionPane.INFORMATION_MESSAGE
-        );
-    }
-
-
-    // =========================
-    // APPLY FOR SELECTED JOB
-    // =========================
-
-    private void applyForSelectedJob() {
-
-        int selectedRow =
-                recommendationTable.getSelectedRow();
-
-
-        // No job selected
-        if (selectedRow == -1) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-
-                    "Please select a job first.",
-
-                    "No Job Selected",
-
-                    JOptionPane.WARNING_MESSAGE
-            );
-
-            return;
-        }
-
-
-        // Get selected recommendation
-        JobMatchResult result =
-                recommendations.get(
-                        selectedRow
+        JDialog dialog =
+                new JDialog(
+                        this,
+                        "Why This Job Matches",
+                        true
                 );
 
+        dialog.setSize(
+                520,
+                350
+        );
 
-        Job selectedJob =
-                result.getJob();
+        dialog.setResizable(false);
 
+        dialog.setLocationRelativeTo(this);
 
-        // Show confirmation
+        JPanel main =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        main.setBackground(BACKGROUND);
+
+        main.setBorder(
+                BorderFactory.createEmptyBorder(
+                        18,
+                        20,
+                        15,
+                        20
+                )
+        );
+
+        JLabel title =
+                new JLabel(
+                        "Why This Job Matches You"
+                );
+
+        title.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        20
+                )
+        );
+
+        title.setForeground(TEXT);
+
+        main.add(
+                title,
+                BorderLayout.NORTH
+        );
+
+        JPanel content =
+                new JPanel();
+
+        content.setLayout(
+                new BoxLayout(
+                        content,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        content.setOpaque(false);
+
+        content.add(
+                Box.createVerticalStrut(15)
+        );
+
+        content.add(
+                createMatchBox(
+                        "AI Match Score",
+                        formatPercentage(
+                                result.getMatchPercentage()
+                        )
+                )
+        );
+
+        content.add(
+                Box.createVerticalStrut(10)
+        );
+
+        content.add(
+                createMatchBox(
+                        "Matched Skills",
+                        shorten(
+                                matchedSkills,
+                                180
+                        )
+                )
+        );
+
+        content.add(
+                Box.createVerticalStrut(10)
+        );
+
+        content.add(
+                createMatchBox(
+                        "Skills to Improve",
+                        shorten(
+                                missingSkills,
+                                180
+                        )
+                )
+        );
+
+        main.add(
+                content,
+                BorderLayout.CENTER
+        );
+
+        JButton closeButton =
+                new JButton("Close");
+
+        closeButton.setPreferredSize(
+                new Dimension(90, 36)
+        );
+
+        styleSecondaryButton(closeButton);
+
+        closeButton.addActionListener(
+                e -> dialog.dispose()
+        );
+
+        JPanel buttonPanel =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.RIGHT
+                        )
+                );
+
+        buttonPanel.setOpaque(false);
+
+        buttonPanel.add(closeButton);
+
+        main.add(
+                buttonPanel,
+                BorderLayout.SOUTH
+        );
+
+        dialog.add(main);
+
+        dialog.setVisible(true);
+    }
+
+    // =========================================================
+    // MATCH BOX
+    // =========================================================
+
+    private JPanel createMatchBox(
+            String title,
+            String value
+    ) {
+
+        JPanel panel =
+                new JPanel(
+                        new BorderLayout(
+                                10,
+                                5
+                        )
+                );
+
+        panel.setBackground(Color.WHITE);
+
+        panel.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                10,
+                                12,
+                                10,
+                                12
+                        )
+                )
+        );
+
+        JLabel titleLabel =
+                new JLabel(title);
+
+        titleLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        12
+                )
+        );
+
+        titleLabel.setForeground(
+                SECONDARY_TEXT
+        );
+
+        JLabel valueLabel =
+                new JLabel(
+                        "<html>"
+                                + escapeHtml(value)
+                                + "</html>"
+                );
+
+        valueLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        valueLabel.setForeground(TEXT);
+
+        panel.add(
+                titleLabel,
+                BorderLayout.NORTH
+        );
+
+        panel.add(
+                valueLabel,
+                BorderLayout.CENTER
+        );
+
+        return panel;
+    }
+
+    // =========================================================
+    // APPLY
+    // =========================================================
+
+    private void applyForJob(
+            JobMatchResult result
+    ) {
+
+        Job job = result.getJob();
+
         int confirm =
                 JOptionPane.showConfirmDialog(
                         this,
-
-                        "Are you sure you want to apply for:\n\n"
-                                + selectedJob.getTitle()
-                                + "\n\nMatch Percentage: "
-                                + result.getMatchPercentage()
-                                + "%",
-
+                        "Do you want to apply for:\n\n"
+                                + job.getTitle()
+                                + "?",
                         "Confirm Application",
-
                         JOptionPane.YES_NO_OPTION
                 );
-
 
         if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
 
+        try {
 
-        // Apply for job
-        boolean success =
-                applicationDAO.applyForJob(
-                        selectedJob.getJobId(),
-                        jobSeeker.getUserId()
+            ApplicationDAO applicationDAO =
+                    new ApplicationDAO();
+
+            boolean success =
+                    applicationDAO.applyForJob(
+                            job.getJobId(),
+                            jobSeeker.getUserId()
+                    );
+
+            if (success) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Application submitted successfully!",
+                        "Application Submitted",
+                        JOptionPane.INFORMATION_MESSAGE
                 );
 
+            } else {
 
-        if (success) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "You have already applied for this job.",
+                        "Already Applied",
+                        JOptionPane.WARNING_MESSAGE
+                );
+            }
 
-            JOptionPane.showMessageDialog(
-                    this,
-
-                    "Application submitted successfully!",
-
-                    "Application Successful",
-
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-        } else {
+        } catch (Exception e) {
 
             JOptionPane.showMessageDialog(
                     this,
-
-                    "You may have already applied for this job.",
-
-                    "Application Failed",
-
-                    JOptionPane.WARNING_MESSAGE
+                    "Unable to submit application.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
             );
+
+            e.printStackTrace();
         }
+    }
+
+    // =========================================================
+    // EMPTY
+    // =========================================================
+
+    private void showEmptyMessage() {
+
+        JPanel empty =
+                new JPanel();
+
+        empty.setLayout(
+                new BoxLayout(
+                        empty,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        empty.setOpaque(false);
+
+        JLabel title =
+                new JLabel(
+                        "No matching jobs found"
+                );
+
+        title.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        18
+                )
+        );
+
+        title.setForeground(TEXT);
+
+        title.setAlignmentX(
+                Component.CENTER_ALIGNMENT
+        );
+
+        JLabel message =
+                new JLabel(
+                        "Update your profile and skills to improve your recommendations."
+                );
+
+        message.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        message.setForeground(
+                SECONDARY_TEXT
+        );
+
+        message.setAlignmentX(
+                Component.CENTER_ALIGNMENT
+        );
+
+        empty.add(
+                Box.createVerticalStrut(60)
+        );
+
+        empty.add(title);
+
+        empty.add(
+                Box.createVerticalStrut(8)
+        );
+
+        empty.add(message);
+
+        jobsPanel.add(empty);
+    }
+
+    // =========================================================
+    // HEADER BUTTON
+    // =========================================================
+
+    private JButton createHeaderButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        12
+                )
+        );
+
+        button.setForeground(Color.WHITE);
+
+        button.setBackground(
+                new Color(
+                        51,
+                        65,
+                        85
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createEmptyBorder(
+                        8,
+                        12,
+                        8,
+                        12
+                )
+        );
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    // =========================================================
+    // PRIMARY BUTTON
+    // =========================================================
+
+    private void stylePrimaryButton(
+            JButton button
+    ) {
+
+        button.setBackground(PRIMARY);
+
+        button.setForeground(Color.WHITE);
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createEmptyBorder(
+                        8,
+                        14,
+                        8,
+                        14
+                )
+        );
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+    }
+
+    // =========================================================
+    // SECONDARY BUTTON
+    // =========================================================
+
+    private void styleSecondaryButton(
+            JButton button
+    ) {
+
+        button.setBackground(Color.WHITE);
+
+        button.setForeground(TEXT);
+
+        button.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setFocusPainted(false);
+
+        button.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                7,
+                                13,
+                                7,
+                                13
+                        )
+                )
+        );
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+    }
+
+    // =========================================================
+    // HELPERS
+    // =========================================================
+
+    private String safe(String value) {
+
+        if (value == null ||
+                value.trim().isEmpty()) {
+
+            return "Not specified";
+        }
+
+        return value.trim();
+    }
+
+    private String formatPercentage(
+            double percentage
+    ) {
+
+        if (percentage == (int) percentage) {
+            return (int) percentage + "%";
+        }
+
+        return String.format(
+                "%.1f%%",
+                percentage
+        );
+    }
+
+    private String setToText(
+            java.util.Set<String> skills
+    ) {
+
+        if (skills == null ||
+                skills.isEmpty()) {
+
+            return "None";
+        }
+
+        return String.join(
+                ", ",
+                skills
+        );
+    }
+
+    private String formatJobType(
+            String jobType
+    ) {
+
+        if (jobType == null ||
+                jobType.trim().isEmpty()) {
+
+            return "Not specified";
+        }
+
+        String value =
+                jobType
+                        .replace("_", " ")
+                        .toLowerCase();
+
+        switch (value) {
+
+            case "full time":
+                return "Full Time";
+
+            case "part time":
+                return "Part Time";
+
+            case "remote":
+                return "Remote";
+
+            case "contract":
+                return "Contract";
+
+            case "internship":
+                return "Internship";
+
+            case "temporary":
+                return "Temporary";
+
+            default:
+                return value;
+        }
+    }
+
+    private String shorten(
+            String text,
+            int maxLength
+    ) {
+
+        if (text == null ||
+                text.trim().isEmpty()) {
+
+            return "Not specified";
+        }
+
+        text =
+                text.replace(
+                        "\n",
+                        " "
+                ).trim();
+
+        if (text.length() <= maxLength) {
+            return text;
+        }
+
+        return text.substring(
+                0,
+                maxLength
+        ) + "...";
+    }
+
+    private String escapeHtml(
+            String text
+    ) {
+
+        if (text == null) {
+            return "";
+        }
+
+        return text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 }

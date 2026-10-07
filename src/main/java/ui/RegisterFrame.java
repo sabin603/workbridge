@@ -1,9 +1,11 @@
+
 package ui;
 
 import dao.UserDAO;
 import model.User;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class RegisterFrame extends JFrame {
@@ -13,11 +15,18 @@ public class RegisterFrame extends JFrame {
     private JPasswordField passwordField;
     private JComboBox<String> roleComboBox;
 
+    private final Color PRIMARY = new Color(37, 99, 235);
+    private final Color DARK = new Color(30, 41, 59);
+    private final Color LIGHT_BG = new Color(241, 245, 249);
+    private final Color CARD_BG = Color.WHITE;
+    private final Color MUTED = new Color(100, 116, 139);
+
     public RegisterFrame() {
 
-        setTitle("WorkBridge - Registration");
+        setTitle("WorkBridge - Create Account");
+        setSize(1000, 700);
 
-        setSize(450, 400);
+        setMinimumSize(new Dimension(700, 550));
 
         setDefaultCloseOperation(
                 JFrame.EXIT_ON_CLOSE
@@ -30,89 +39,154 @@ public class RegisterFrame extends JFrame {
 
     private void createUI() {
 
-        JPanel panel = new JPanel();
+        JPanel background = new JPanel(
+                new GridBagLayout()
+        );
 
-        panel.setLayout(null);
+        background.setBackground(LIGHT_BG);
 
-        JLabel title =
-                new JLabel("Create WorkBridge Account");
+        JPanel card = new JPanel(
+                new BorderLayout()
+        );
 
-        title.setFont(
-                new Font(
-                        "Arial",
-                        Font.BOLD,
-                        22
+        card.setPreferredSize(
+                new Dimension(460, 570)
+        );
+
+        card.setBackground(CARD_BG);
+
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(226, 232, 240)
+                        ),
+                        new EmptyBorder(
+                                35, 45, 35, 45
+                        )
                 )
         );
 
-        title.setBounds(
-                80, 25, 300, 35
+        JPanel content = new JPanel();
+
+        content.setLayout(
+                new BoxLayout(
+                        content,
+                        BoxLayout.Y_AXIS
+                )
         );
 
-        panel.add(title);
+        content.setBackground(CARD_BG);
+
+        JLabel logo =
+                new JLabel("WorkBridge");
+
+        logo.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        30
+                )
+        );
+
+        logo.setForeground(PRIMARY);
+        logo.setAlignmentX(
+                Component.CENTER_ALIGNMENT
+        );
+
+        JLabel subtitle =
+                new JLabel(
+                        "Join the professional job network"
+                );
+
+        subtitle.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        subtitle.setForeground(MUTED);
+
+        subtitle.setAlignmentX(
+                Component.CENTER_ALIGNMENT
+        );
+
+        content.add(logo);
+        content.add(Box.createVerticalStrut(7));
+        content.add(subtitle);
+        content.add(Box.createVerticalStrut(25));
+
+        JLabel heading =
+                new JLabel("Create Your Account");
+
+        heading.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        21
+                )
+        );
+
+        heading.setForeground(DARK);
+
+        heading.setAlignmentX(
+                Component.CENTER_ALIGNMENT
+        );
+
+        content.add(heading);
+        content.add(Box.createVerticalStrut(22));
 
         JLabel nameLabel =
-                new JLabel("Name:");
+                createLabel("Full Name");
 
-        nameLabel.setBounds(
-                60, 90, 100, 25
-        );
-
-        panel.add(nameLabel);
+        content.add(nameLabel);
+        content.add(Box.createVerticalStrut(5));
 
         nameField =
                 new JTextField();
 
-        nameField.setBounds(
-                160, 90, 210, 25
-        );
+        styleField(nameField);
 
-        panel.add(nameField);
+        content.add(nameField);
+
+        content.add(Box.createVerticalStrut(13));
 
         JLabel emailLabel =
-                new JLabel("Email:");
+                createLabel("Email Address");
 
-        emailLabel.setBounds(
-                60, 130, 100, 25
-        );
-
-        panel.add(emailLabel);
+        content.add(emailLabel);
+        content.add(Box.createVerticalStrut(5));
 
         emailField =
                 new JTextField();
 
-        emailField.setBounds(
-                160, 130, 210, 25
-        );
+        styleField(emailField);
 
-        panel.add(emailField);
+        content.add(emailField);
+
+        content.add(Box.createVerticalStrut(13));
 
         JLabel passwordLabel =
-                new JLabel("Password:");
+                createLabel("Password");
 
-        passwordLabel.setBounds(
-                60, 170, 100, 25
-        );
-
-        panel.add(passwordLabel);
+        content.add(passwordLabel);
+        content.add(Box.createVerticalStrut(5));
 
         passwordField =
                 new JPasswordField();
 
-        passwordField.setBounds(
-                160, 170, 210, 25
-        );
+        styleField(passwordField);
 
-        panel.add(passwordField);
+        content.add(passwordField);
+
+        content.add(Box.createVerticalStrut(13));
 
         JLabel roleLabel =
-                new JLabel("Account Type:");
+                createLabel("Account Type");
 
-        roleLabel.setBounds(
-                60, 210, 100, 25
-        );
-
-        panel.add(roleLabel);
+        content.add(roleLabel);
+        content.add(Box.createVerticalStrut(5));
 
         roleComboBox =
                 new JComboBox<>(
@@ -122,29 +196,23 @@ public class RegisterFrame extends JFrame {
                         }
                 );
 
-        roleComboBox.setBounds(
-                160, 210, 210, 25
-        );
+        styleComboBox(roleComboBox);
 
-        panel.add(roleComboBox);
+        content.add(roleComboBox);
+
+        content.add(Box.createVerticalStrut(22));
 
         JButton registerButton =
-                new JButton("Register");
+                createPrimaryButton("Create Account");
 
-        registerButton.setBounds(
-                160, 260, 100, 35
-        );
+        content.add(registerButton);
 
-        panel.add(registerButton);
+        content.add(Box.createVerticalStrut(12));
 
         JButton backButton =
-                new JButton("Back to Login");
+                createLinkButton("Back to Login");
 
-        backButton.setBounds(
-                145, 315, 140, 30
-        );
-
-        panel.add(backButton);
+        content.add(backButton);
 
         registerButton.addActionListener(
                 e -> register()
@@ -157,7 +225,189 @@ public class RegisterFrame extends JFrame {
             dispose();
         });
 
-        add(panel);
+        card.add(
+                content,
+                BorderLayout.CENTER
+        );
+
+        background.add(card);
+
+        add(background);
+
+        getRootPane().setDefaultButton(
+                registerButton
+        );
+    }
+
+    private JLabel createLabel(String text) {
+
+        JLabel label =
+                new JLabel(text);
+
+        label.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        label.setForeground(DARK);
+
+        label.setAlignmentX(
+                Component.CENTER_ALIGNMENT
+        );
+
+        return label;
+    }
+
+    private void styleField(
+            JTextField field
+    ) {
+
+        field.setMaximumSize(
+                new Dimension(
+                        Integer.MAX_VALUE,
+                        40
+                )
+        );
+
+        field.setPreferredSize(
+                new Dimension(320, 40)
+        );
+
+        field.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        field.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                new Color(203, 213, 225)
+                        ),
+                        new EmptyBorder(
+                                7, 12, 7, 12
+                        )
+                )
+        );
+
+        field.setBackground(Color.WHITE);
+    }
+
+    private void styleComboBox(
+            JComboBox<String> comboBox
+    ) {
+
+        comboBox.setMaximumSize(
+                new Dimension(
+                        Integer.MAX_VALUE,
+                        40
+                )
+        );
+
+        comboBox.setPreferredSize(
+                new Dimension(320, 40)
+        );
+
+        comboBox.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        comboBox.setBackground(Color.WHITE);
+
+        comboBox.setBorder(
+                BorderFactory.createLineBorder(
+                        new Color(203, 213, 225)
+                )
+        );
+    }
+
+    private JButton createPrimaryButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setPreferredSize(
+                new Dimension(320, 42)
+        );
+
+        button.setMaximumSize(
+                new Dimension(320, 42)
+        );
+
+        button.setMinimumSize(
+                new Dimension(320, 42)
+        );
+
+        button.setAlignmentX(
+                Component.CENTER_ALIGNMENT
+        );
+
+        button.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        button.setForeground(Color.WHITE);
+        button.setBackground(PRIMARY);
+
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
+    }
+
+    private JButton createLinkButton(
+            String text
+    ) {
+
+        JButton button =
+                new JButton(text);
+
+        button.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        button.setForeground(PRIMARY);
+        button.setBackground(CARD_BG);
+
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+
+        button.setAlignmentX(
+                Component.CENTER_ALIGNMENT
+        );
+
+        button.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        return button;
     }
 
     private void register() {
@@ -236,3 +486,4 @@ public class RegisterFrame extends JFrame {
         }
     }
 }
+

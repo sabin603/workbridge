@@ -18,7 +18,6 @@ public class ApplicationDAO {
 
     public boolean applyForJob(int jobId, int applicantId) {
 
-        // First check whether this applicant already applied
         String checkSql = """
                 SELECT application_id
                 FROM applications
@@ -26,7 +25,6 @@ public class ApplicationDAO {
                 AND applicant_id = ?
                 """;
 
-        // Insert new application
         String insertSql = """
                 INSERT INTO applications
                 (job_id, applicant_id, status)
@@ -40,30 +38,20 @@ public class ApplicationDAO {
                         connection.prepareStatement(checkSql)
         ) {
 
-            // =========================
-            // CHECK EXISTING APPLICATION
-            // =========================
-
             checkStatement.setInt(1, jobId);
             checkStatement.setInt(2, applicantId);
 
-            ResultSet result =
+            ResultSet checkResult =
                     checkStatement.executeQuery();
 
-            if (result.next()) {
+            if (checkResult.next()) {
 
                 System.out.println(
-                        "Applicant already applied. "
-                                + "Job ID: " + jobId
-                                + ", Applicant ID: " + applicantId
+                        "Applicant already applied for this job."
                 );
 
                 return false;
             }
-
-            // =========================
-            // INSERT APPLICATION
-            // =========================
 
             try (
                     PreparedStatement insertStatement =
@@ -73,21 +61,9 @@ public class ApplicationDAO {
                 insertStatement.setInt(1, jobId);
                 insertStatement.setInt(2, applicantId);
 
-                int rows =
-                        insertStatement.executeUpdate();
+                insertStatement.executeUpdate();
 
-                if (rows > 0) {
-
-                    System.out.println(
-                            "Application inserted successfully. "
-                                    + "Job ID: " + jobId
-                                    + ", Applicant ID: " + applicantId
-                    );
-
-                    return true;
-                }
-
-                return false;
+                return true;
             }
 
         } catch (SQLException e) {
@@ -123,6 +99,10 @@ public class ApplicationDAO {
                     a.applied_at,
                     a.status,
 
+                    a.interview_date,
+                    a.interview_time,
+                    a.interview_notes,
+
                     u.name AS applicant_name,
                     u.email AS applicant_email,
 
@@ -150,6 +130,7 @@ public class ApplicationDAO {
         try (
                 Connection connection =
                         DatabaseConnection.getConnection();
+
                 PreparedStatement statement =
                         connection.prepareStatement(sql)
         ) {
@@ -184,6 +165,28 @@ public class ApplicationDAO {
                 application.setStatus(
                         result.getString("status")
                 );
+
+
+                // =============================================
+                // INTERVIEW INFORMATION
+                // =============================================
+
+                application.setInterviewDate(
+                        result.getString("interview_date")
+                );
+
+                application.setInterviewTime(
+                        result.getString("interview_time")
+                );
+
+                application.setInterviewNotes(
+                        result.getString("interview_notes")
+                );
+
+
+                // =============================================
+                // APPLICANT INFORMATION
+                // =============================================
 
                 application.setApplicantName(
                         result.getString("applicant_name")
@@ -222,7 +225,7 @@ public class ApplicationDAO {
 
 
     // =========================================================
-    // GET APPLICATIONS BY APPLICANT
+    // GET APPLICATIONS FOR JOB SEEKER
     // =========================================================
 
     public List<Application> getApplicationsByApplicant(
@@ -239,6 +242,10 @@ public class ApplicationDAO {
                     a.applicant_id,
                     a.applied_at,
                     a.status,
+
+                    a.interview_date,
+                    a.interview_time,
+                    a.interview_notes,
 
                     j.title AS job_title,
                     j.category AS job_category,
@@ -258,6 +265,7 @@ public class ApplicationDAO {
         try (
                 Connection connection =
                         DatabaseConnection.getConnection();
+
                 PreparedStatement statement =
                         connection.prepareStatement(sql)
         ) {
@@ -291,6 +299,28 @@ public class ApplicationDAO {
                 application.setStatus(
                         result.getString("status")
                 );
+
+
+                // =============================================
+                // INTERVIEW INFORMATION
+                // =============================================
+
+                application.setInterviewDate(
+                        result.getString("interview_date")
+                );
+
+                application.setInterviewTime(
+                        result.getString("interview_time")
+                );
+
+                application.setInterviewNotes(
+                        result.getString("interview_notes")
+                );
+
+
+                // =============================================
+                // JOB INFORMATION
+                // =============================================
 
                 application.setJobTitle(
                         result.getString("job_title")
@@ -348,6 +378,7 @@ public class ApplicationDAO {
         try (
                 Connection connection =
                         DatabaseConnection.getConnection();
+
                 PreparedStatement statement =
                         connection.prepareStatement(sql)
         ) {
@@ -371,5 +402,151 @@ public class ApplicationDAO {
 
             return false;
         }
+    }
+
+
+    // =========================================================
+    // SCHEDULE INTERVIEW
+    // =========================================================
+
+    public boolean scheduleInterview(
+            int applicationId,
+            int employerId,
+            String interviewDate,
+            String interviewTime,
+            String interviewNotes
+    ) {
+
+        String sql = """
+                UPDATE applications
+                SET
+                    status = 'INTERVIEW',
+                    interview_date = ?,
+                    interview_time = ?,
+                    interview_notes = ?
+                WHERE application_id = ?
+                AND job_id IN (
+                    SELECT job_id
+                    FROM jobs
+                    WHERE employer_id = ?
+                )
+                """;
+
+        try (
+                Connection connection =
+                        DatabaseConnection.getConnection();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(sql)
+        ) {
+
+            statement.setString(1, interviewDate);
+            statement.setString(2, interviewTime);
+            statement.setString(3, interviewNotes);
+            statement.setInt(4, applicationId);
+            statement.setInt(5, employerId);
+
+            int rows =
+                    statement.executeUpdate();
+
+            return rows > 0;
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Schedule interview error:"
+            );
+
+            e.printStackTrace();
+
+            return false;
+        }
+    }
+
+
+    // =========================================================
+    // TOTAL APPLICANTS
+    // =========================================================
+
+    public int getTotalApplicantsByEmployer(
+            int employerId
+    ) {
+
+        String sql = """
+                SELECT COUNT(*)
+                FROM applications a
+                JOIN jobs j
+                    ON a.job_id = j.job_id
+                WHERE j.employer_id = ?
+                """;
+
+        try (
+                Connection connection =
+                        DatabaseConnection.getConnection();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(sql)
+        ) {
+
+            statement.setInt(1, employerId);
+
+            ResultSet result =
+                    statement.executeQuery();
+
+            if (result.next()) {
+
+                return result.getInt(1);
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+
+    // =========================================================
+    // SELECTED APPLICANTS
+    // =========================================================
+
+    public int getSelectedApplicantsByEmployer(
+            int employerId
+    ) {
+
+        String sql = """
+                SELECT COUNT(*)
+                FROM applications a
+                JOIN jobs j
+                    ON a.job_id = j.job_id
+                WHERE j.employer_id = ?
+                AND a.status = 'SELECTED'
+                """;
+
+        try (
+                Connection connection =
+                        DatabaseConnection.getConnection();
+
+                PreparedStatement statement =
+                        connection.prepareStatement(sql)
+        ) {
+
+            statement.setInt(1, employerId);
+
+            ResultSet result =
+                    statement.executeQuery();
+
+            if (result.next()) {
+
+                return result.getInt(1);
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+
+        return 0;
     }
 }

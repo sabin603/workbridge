@@ -148,8 +148,14 @@ public class JobForm extends JFrame {
                                 "Data Entry",
                                 "Marketing",
                                 "Writing",
-                                "Mobile Development",
-                                "Database",
+                                "Plumbing",
+                                "Electrician",
+                                "Video Editor",
+                                "System Administrator",
+                                "Waiter",
+                                "Hotel Manager",
+                                "House Cleaner",
+                                "Receptionist",
                                 "Other"
                         }
                 );
@@ -295,7 +301,8 @@ public class JobForm extends JFrame {
                                 "PART_TIME",
                                 "CONTRACT",
                                 "INTERNSHIP",
-                                "REMOTE"
+                                "REMOTE",
+                                "TEMPORARY"
                         }
                 );
 

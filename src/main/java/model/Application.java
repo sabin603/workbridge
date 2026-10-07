@@ -21,6 +21,10 @@ public class Application {
     private String jobLocation;
     private String jobType;
 
+    private String interviewDate;
+    private String interviewTime;
+    private String interviewNotes;
+
     public Application() {
     }
 
@@ -139,6 +143,30 @@ public class Application {
 
     public void setJobType(String jobType) {
         this.jobType = jobType;
+    }
+
+    public String getInterviewDate() {
+        return interviewDate;
+    }
+
+    public void setInterviewDate(String interviewDate) {
+        this.interviewDate = interviewDate;
+    }
+
+    public String getInterviewTime() {
+        return interviewTime;
+    }
+
+    public void setInterviewTime(String interviewTime) {
+        this.interviewTime = interviewTime;
+    }
+
+    public String getInterviewNotes() {
+        return interviewNotes;
+    }
+
+    public void setInterviewNotes(String interviewNotes) {
+        this.interviewNotes = interviewNotes;
     }
 }
 

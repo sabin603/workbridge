@@ -395,7 +395,7 @@ public class ApplicantManagementFrame extends JFrame {
         card.setMaximumSize(
                 new Dimension(
                         Integer.MAX_VALUE,
-                        220
+                        270
                 )
         );
 
@@ -691,6 +691,98 @@ public class ApplicantManagementFrame extends JFrame {
 
 
         // =====================================================
+        // INTERVIEW DETAILS
+        // =====================================================
+
+        if ("INTERVIEW".equals(
+                application.getStatus()
+        )) {
+
+            String interviewDate =
+                    displayValue(
+                            application
+                                    .getInterviewDate()
+                    );
+
+            String interviewTime =
+                    displayValue(
+                            application
+                                    .getInterviewTime()
+                    );
+
+            String interviewNotes =
+                    displayValue(
+                            application
+                                    .getInterviewNotes()
+                    );
+
+
+            JLabel interviewLabel =
+                    new JLabel(
+                            "Interview: "
+                                    + interviewDate
+                                    + " at "
+                                    + interviewTime
+                    );
+
+            interviewLabel.setFont(
+                    new Font(
+                            "Segoe UI",
+                            Font.BOLD,
+                            13
+                    )
+            );
+
+            interviewLabel.setForeground(
+                    new Color(
+                            180,
+                            83,
+                            9
+                    )
+            );
+
+
+            JLabel notesLabel =
+                    new JLabel(
+                            "<html>Notes: "
+                                    + escapeHtml(
+                                    interviewNotes
+                            )
+                                    + "</html>"
+                    );
+
+            notesLabel.setFont(
+                    new Font(
+                            "Segoe UI",
+                            Font.PLAIN,
+                            12
+                    )
+            );
+
+            notesLabel.setForeground(
+                    MUTED
+            );
+
+
+            infoPanel.add(
+                    Box.createVerticalStrut(8)
+            );
+
+            infoPanel.add(
+                    interviewLabel
+            );
+
+            infoPanel.add(
+                    Box.createVerticalStrut(3)
+            );
+
+            infoPanel.add(
+                    notesLabel
+            );
+        }
+
+
+        // =====================================================
         // RIGHT - STATUS + ACTIONS
         // =====================================================
 
@@ -711,7 +803,7 @@ public class ApplicantManagementFrame extends JFrame {
         actionPanel.setPreferredSize(
                 new Dimension(
                         200,
-                        160
+                        180
                 )
         );
 
@@ -1453,6 +1545,7 @@ public class ApplicantManagementFrame extends JFrame {
         }
 
 
+
         JTextField dateField =
                 new JTextField();
 
@@ -1490,9 +1583,18 @@ public class ApplicantManagementFrame extends JFrame {
                 GridBagConstraints.HORIZONTAL;
 
 
+        // =====================================================
+        // DATE
+        // =====================================================
+
         gbc.gridx = 0;
         gbc.gridy = 0;
-
+        panel.add(
+                new JLabel(
+                        "Interview Date (YYYY-MM-DD):"
+                ),
+                gbc
+        );
         panel.add(
                 new JLabel(
                         "Interview Date:"
@@ -1509,8 +1611,18 @@ public class ApplicantManagementFrame extends JFrame {
         );
 
 
+        // =====================================================
+        // TIME
+        // =====================================================
+
         gbc.gridx = 0;
         gbc.gridy = 1;
+        panel.add(
+                new JLabel(
+                        "Interview Time (HH:MM):"
+                ),
+                gbc
+        );
 
         panel.add(
                 new JLabel(
@@ -1528,8 +1640,15 @@ public class ApplicantManagementFrame extends JFrame {
         );
 
 
+        // =====================================================
+        // NOTES
+        // =====================================================
+
         gbc.gridx = 0;
         gbc.gridy = 2;
+
+        gbc.anchor =
+                GridBagConstraints.NORTHWEST;
 
         panel.add(
                 new JLabel(
@@ -1566,13 +1685,25 @@ public class ApplicantManagementFrame extends JFrame {
         }
 
 
-        if (dateField.getText()
-                .trim()
-                .isEmpty()
-                ||
+        String interviewDate =
+                dateField.getText()
+                        .trim();
+
+        String interviewTime =
                 timeField.getText()
-                        .trim()
-                        .isEmpty()) {
+                        .trim();
+
+        String interviewNotes =
+                notesArea.getText()
+                        .trim();
+
+
+        // =====================================================
+        // VALIDATION
+        // =====================================================
+
+        if (interviewDate.isEmpty()
+                || interviewTime.isEmpty()) {
 
             JOptionPane.showMessageDialog(
                     this,
@@ -1585,14 +1716,52 @@ public class ApplicantManagementFrame extends JFrame {
         }
 
 
+        // Basic date format validation
+        if (!interviewDate.matches(
+                "\\d{4}-\\d{2}-\\d{2}"
+        )) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter date in this format:\nYYYY-MM-DD",
+                    "Invalid Date",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+
+        // Basic time format validation
+        if (!interviewTime.matches(
+                "\\d{2}:\\d{2}"
+        )) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter time in this format:\nHH:MM",
+                    "Invalid Time",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // SAVE INTERVIEW
+        // =====================================================
+
         boolean success =
                 applicationDAO
-                        .updateApplicationStatus(
+                        .scheduleInterview(
                                 application
                                         .getApplicationId(),
                                 employer
                                         .getUserId(),
-                                "INTERVIEW"
+                                interviewDate,
+                                interviewTime,
+                                interviewNotes
                         );
 
 
@@ -1605,9 +1774,9 @@ public class ApplicantManagementFrame extends JFrame {
                             + application
                             .getApplicantName()
                             + "\nDate: "
-                            + dateField.getText()
+                            + interviewDate
                             + "\nTime: "
-                            + timeField.getText(),
+                            + interviewTime,
                     "Interview Scheduled",
                     JOptionPane.INFORMATION_MESSAGE
             );
@@ -1963,5 +2132,29 @@ public class ApplicantManagementFrame extends JFrame {
         }
 
         return value.trim();
+    }
+
+
+    private String escapeHtml(
+            String value
+    ) {
+
+        if (value == null) {
+            return "";
+        }
+
+        return value
+                .replace(
+                        "&",
+                        "&amp;"
+                )
+                .replace(
+                        "<",
+                        "&lt;"
+                )
+                .replace(
+                        ">",
+                        "&gt;"
+                );
     }
 }

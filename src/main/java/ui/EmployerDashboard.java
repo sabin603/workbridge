@@ -1,5 +1,6 @@
 package ui;
 
+import dao.ApplicationDAO;
 import dao.JobDAO;
 import model.Job;
 import model.User;
@@ -12,13 +13,20 @@ public class EmployerDashboard extends JFrame {
 
     private User employer;
     private JobDAO jobDAO;
+    private ApplicationDAO applicationDAO;
     private JPanel jobsPanel;
+
+    private JLabel totalJobsValue;
+    private JLabel activeJobsValue;
+    private JLabel applicantsValue;
+    private JLabel selectedValue;
 
     private final Color BACKGROUND = new Color(245, 247, 250);
     private final Color HEADER = new Color(25, 35, 50);
     private final Color TEXT = new Color(31, 41, 55);
     private final Color SECONDARY_TEXT = new Color(107, 114, 128);
     private final Color PRIMARY = new Color(37, 99, 235);
+    private final Color SUCCESS = new Color(22, 101, 52);
     private final Color DANGER = new Color(220, 38, 38);
     private final Color BORDER = new Color(229, 231, 235);
 
@@ -26,10 +34,11 @@ public class EmployerDashboard extends JFrame {
 
         this.employer = user;
         this.jobDAO = new JobDAO();
+        this.applicationDAO = new ApplicationDAO();
 
         setTitle("WorkBridge - Employer Dashboard");
-        setSize(1000, 700);
-        setMinimumSize(new Dimension(900, 600));
+        setSize(1100, 750);
+        setMinimumSize(new Dimension(950, 650));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -64,8 +73,7 @@ public class EmployerDashboard extends JFrame {
         );
         brandPanel.setOpaque(false);
 
-        JLabel titleLabel =
-                new JLabel("WorkBridge");
+        JLabel titleLabel = new JLabel("WorkBridge");
 
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(
@@ -102,12 +110,14 @@ public class EmployerDashboard extends JFrame {
         // =====================================================
 
         JPanel rightHeaderPanel = new JPanel();
+
         rightHeaderPanel.setLayout(
                 new BoxLayout(
                         rightHeaderPanel,
                         BoxLayout.Y_AXIS
                 )
         );
+
         rightHeaderPanel.setOpaque(false);
 
         JLabel welcomeLabel =
@@ -160,9 +170,11 @@ public class EmployerDashboard extends JFrame {
         headerButtons.add(logoutButton);
 
         rightHeaderPanel.add(welcomeLabel);
+
         rightHeaderPanel.add(
                 Box.createVerticalStrut(10)
         );
+
         rightHeaderPanel.add(headerButtons);
 
         headerPanel.add(
@@ -188,7 +200,7 @@ public class EmployerDashboard extends JFrame {
                 new JPanel(
                         new BorderLayout(
                                 0,
-                                12
+                                14
                         )
                 );
 
@@ -199,6 +211,22 @@ public class EmployerDashboard extends JFrame {
                         15, 20, 15, 20
                 )
         );
+
+        // =====================================================
+        // TOP CONTENT
+        // =====================================================
+
+        JPanel topPanel =
+                new JPanel();
+
+        topPanel.setLayout(
+                new BoxLayout(
+                        topPanel,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        topPanel.setOpaque(false);
 
         // =====================================================
         // SECTION HEADER
@@ -224,7 +252,7 @@ public class EmployerDashboard extends JFrame {
         sectionText.setOpaque(false);
 
         JLabel sectionTitle =
-                new JLabel("Your Job Posts");
+                new JLabel("Recruitment Overview");
 
         sectionTitle.setFont(
                 new Font(
@@ -238,7 +266,7 @@ public class EmployerDashboard extends JFrame {
 
         JLabel sectionDescription =
                 new JLabel(
-                        "Manage your job vacancies and review applicants."
+                        "Track your vacancies and candidate activity."
                 );
 
         sectionDescription.setFont(
@@ -254,9 +282,11 @@ public class EmployerDashboard extends JFrame {
         );
 
         sectionText.add(sectionTitle);
+
         sectionText.add(
                 Box.createVerticalStrut(3)
         );
+
         sectionText.add(sectionDescription);
 
         sectionHeader.add(
@@ -264,8 +294,117 @@ public class EmployerDashboard extends JFrame {
                 BorderLayout.WEST
         );
 
+        topPanel.add(sectionHeader);
+
+        topPanel.add(
+                Box.createVerticalStrut(12)
+        );
+
+        // =====================================================
+        // STATISTICS CARDS
+        // =====================================================
+
+        JPanel statsPanel =
+                new JPanel(
+                        new GridLayout(
+                                1,
+                                4,
+                                12,
+                                0
+                        )
+                );
+
+        statsPanel.setOpaque(false);
+
+        JPanel totalJobsCard =
+                createStatCard(
+                        "Total Jobs",
+                        "0",
+                        PRIMARY
+                );
+
+        JPanel activeJobsCard =
+                createStatCard(
+                        "Active Jobs",
+                        "0",
+                        new Color(14, 116, 144)
+                );
+
+        JPanel applicantsCard =
+                createStatCard(
+                        "Applications",
+                        "0",
+                        new Color(124, 58, 237)
+                );
+
+        JPanel selectedCard =
+                createStatCard(
+                        "Selected",
+                        "0",
+                        SUCCESS
+                );
+
+        totalJobsValue =
+                (JLabel) totalJobsCard.getClientProperty(
+                        "valueLabel"
+                );
+
+        activeJobsValue =
+                (JLabel) activeJobsCard.getClientProperty(
+                        "valueLabel"
+                );
+
+        applicantsValue =
+                (JLabel) applicantsCard.getClientProperty(
+                        "valueLabel"
+                );
+
+        selectedValue =
+                (JLabel) selectedCard.getClientProperty(
+                        "valueLabel"
+                );
+
+        statsPanel.add(totalJobsCard);
+        statsPanel.add(activeJobsCard);
+        statsPanel.add(applicantsCard);
+        statsPanel.add(selectedCard);
+
+        topPanel.add(statsPanel);
+
         mainPanel.add(
-                sectionHeader,
+                topPanel,
+                BorderLayout.NORTH
+        );
+
+        // =====================================================
+        // JOB SECTION
+        // =====================================================
+
+        JPanel jobsSection =
+                new JPanel(
+                        new BorderLayout(
+                                0,
+                                8
+                        )
+                );
+
+        jobsSection.setOpaque(false);
+
+        JLabel jobsTitle =
+                new JLabel("Your Job Posts");
+
+        jobsTitle.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        18
+                )
+        );
+
+        jobsTitle.setForeground(TEXT);
+
+        jobsSection.add(
+                jobsTitle,
                 BorderLayout.NORTH
         );
 
@@ -299,9 +438,7 @@ public class EmployerDashboard extends JFrame {
                 BorderFactory.createEmptyBorder()
         );
 
-        scrollPane.setBackground(
-                BACKGROUND
-        );
+        scrollPane.setBackground(BACKGROUND);
 
         scrollPane.getViewport()
                 .setBackground(BACKGROUND);
@@ -317,8 +454,13 @@ public class EmployerDashboard extends JFrame {
         scrollPane.getVerticalScrollBar()
                 .setUnitIncrement(16);
 
-        mainPanel.add(
+        jobsSection.add(
                 scrollPane,
+                BorderLayout.CENTER
+        );
+
+        mainPanel.add(
+                jobsSection,
                 BorderLayout.CENTER
         );
 
@@ -342,6 +484,112 @@ public class EmployerDashboard extends JFrame {
         logoutButton.addActionListener(
                 e -> logout()
         );
+    }
+
+    // =========================================================
+    // STAT CARD
+    // =========================================================
+
+    private JPanel createStatCard(
+            String title,
+            String value,
+            Color accent
+    ) {
+
+        JPanel card =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        card.setBackground(Color.WHITE);
+
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER,
+                                1
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                15,
+                                17,
+                                15,
+                                17
+                        )
+                )
+        );
+
+        JPanel accentPanel =
+                new JPanel();
+
+        accentPanel.setBackground(accent);
+        accentPanel.setPreferredSize(
+                new Dimension(5, 60)
+        );
+
+        JPanel content =
+                new JPanel();
+
+        content.setLayout(
+                new BoxLayout(
+                        content,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        content.setOpaque(false);
+
+        JLabel titleLabel =
+                new JLabel(title);
+
+        titleLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        titleLabel.setForeground(
+                SECONDARY_TEXT
+        );
+
+        JLabel valueLabel =
+                new JLabel(value);
+
+        valueLabel.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        27
+                )
+        );
+
+        valueLabel.setForeground(TEXT);
+
+        content.add(titleLabel);
+
+        content.add(
+                Box.createVerticalStrut(5)
+        );
+
+        content.add(valueLabel);
+
+        card.add(
+                accentPanel,
+                BorderLayout.WEST
+        );
+
+        card.add(
+                content,
+                BorderLayout.CENTER
+        );
+
+        card.putClientProperty(
+                "valueLabel",
+                valueLabel
+        );
+
+        return card;
     }
 
     // =========================================================
@@ -465,7 +713,7 @@ public class EmployerDashboard extends JFrame {
         );
 
         salaryLabel.setForeground(
-                new Color(22, 101, 52)
+                SUCCESS
         );
 
         JLabel typeLabel =
@@ -519,41 +767,31 @@ public class EmployerDashboard extends JFrame {
                 Box.createVerticalStrut(5)
         );
 
-        informationPanel.add(
-                categoryLabel
-        );
+        informationPanel.add(categoryLabel);
 
         informationPanel.add(
                 Box.createVerticalStrut(7)
         );
 
-        informationPanel.add(
-                locationLabel
-        );
+        informationPanel.add(locationLabel);
 
         informationPanel.add(
                 Box.createVerticalStrut(3)
         );
 
-        informationPanel.add(
-                typeLabel
-        );
+        informationPanel.add(typeLabel);
 
         informationPanel.add(
                 Box.createVerticalStrut(3)
         );
 
-        informationPanel.add(
-                salaryLabel
-        );
+        informationPanel.add(salaryLabel);
 
         informationPanel.add(
                 Box.createVerticalStrut(8)
         );
 
-        informationPanel.add(
-                descriptionLabel
-        );
+        informationPanel.add(descriptionLabel);
 
         // =====================================================
         // ACTION BUTTONS
@@ -597,17 +835,9 @@ public class EmployerDashboard extends JFrame {
                 e -> deleteJob(job)
         );
 
-        actionPanel.add(
-                viewApplicantsButton
-        );
-
-        actionPanel.add(
-                editButton
-        );
-
-        actionPanel.add(
-                deleteButton
-        );
+        actionPanel.add(viewApplicantsButton);
+        actionPanel.add(editButton);
+        actionPanel.add(deleteButton);
 
         card.add(
                 informationPanel,
@@ -634,6 +864,55 @@ public class EmployerDashboard extends JFrame {
                 jobDAO.getJobsByEmployer(
                         employer.getUserId()
                 );
+
+        // =====================================================
+        // UPDATE STATISTICS
+        // =====================================================
+
+        int totalJobs =
+                jobs == null
+                        ? 0
+                        : jobs.size();
+
+        int totalApplicants =
+                applicationDAO
+                        .getTotalApplicantsByEmployer(
+                                employer.getUserId()
+                        );
+
+        int selectedApplicants =
+                applicationDAO
+                        .getSelectedApplicantsByEmployer(
+                                employer.getUserId()
+                        );
+
+        if (totalJobsValue != null) {
+            totalJobsValue.setText(
+                    String.valueOf(totalJobs)
+            );
+        }
+
+        if (activeJobsValue != null) {
+            activeJobsValue.setText(
+                    String.valueOf(totalJobs)
+            );
+        }
+
+        if (applicantsValue != null) {
+            applicantsValue.setText(
+                    String.valueOf(totalApplicants)
+            );
+        }
+
+        if (selectedValue != null) {
+            selectedValue.setText(
+                    String.valueOf(selectedApplicants)
+            );
+        }
+
+        // =====================================================
+        // JOB LIST
+        // =====================================================
 
         if (jobs == null || jobs.isEmpty()) {
 
@@ -690,24 +969,18 @@ public class EmployerDashboard extends JFrame {
             );
 
             emptyPanel.add(
-                    Box.createVerticalStrut(70)
+                    Box.createVerticalStrut(50)
             );
 
-            emptyPanel.add(
-                    emptyTitle
-            );
+            emptyPanel.add(emptyTitle);
 
             emptyPanel.add(
                     Box.createVerticalStrut(8)
             );
 
-            emptyPanel.add(
-                    emptyMessage
-            );
+            emptyPanel.add(emptyMessage);
 
-            jobsPanel.add(
-                    emptyPanel
-            );
+            jobsPanel.add(emptyPanel);
 
         } else {
 
